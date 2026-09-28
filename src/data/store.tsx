@@ -52,6 +52,7 @@ export interface AppState {
   leaves: LeaveEntry[];
   logs: AuditLog[];
   login: (identifier: string, password: string) => Promise<boolean>;
+  changeOwnPassword: (currentPassword: string, newPassword: string) => Promise<void>;
   logout: () => void;
   importRaw: (rows: AttendanceRaw[], fileName: string) => { duplicates: number; anomalies: number; batchId: string };
   verifyRecord: (id: string, patch: Partial<AttendanceFinal>, note: string) => void | Promise<void>;
@@ -189,7 +190,7 @@ function inScope(user: User | null, departmentId: string, unitId: string) {
 }
 
 export function AppProvider({ children }: { children: ReactNode }) {
-  const [users, setUsers] = useState<User[]>(() => loadState(STORAGE.users, seedUsers));
+  const [users, setUsers] = useState<User[]>(() => loadState(STORAGE.users, seedUsers).filter((user) => Boolean(user.passwordHash)));
   const [employees, setEmployees] = useState<Employee[]>(() => loadState(STORAGE.employees, seedEmployees).map((employee) => ({ ...employee, departmentId: migrateDepartmentId(employee.departmentId)! })));
   const [departmentList, setDepartmentList] = useState<Department[]>(() => loadState("rica-departments-v3", departments));
   const [shifts, setShifts] = useState(() => loadState(STORAGE.shifts, seedShifts));
@@ -215,7 +216,14 @@ export function AppProvider({ children }: { children: ReactNode }) {
     }
   });
 
-  // Restore API sessions and load the server's department catalog after a page refresh.
+  useEffect(() => {
+    localStorage.removeItem("rica-api-access-token");
+    localStorage.removeItem("rica-api-refresh-token");
+    localStorage.removeItem("rica-api-user");
+    sessionStorage.removeItem("rica-api-force-password-change");
+  }, []);
+
+  // Disabled in frontend-only mode; local demo sessions load from browser storage above.
   useEffect(() => {
     if (!apiConfigured) return;
     const token = localStorage.getItem("rica-api-access-token");
@@ -466,6 +474,18 @@ export function AppProvider({ children }: { children: ReactNode }) {
           ...prev,
         ]);
         return true;
+      },
+      changeOwnPassword: async (currentPassword, newPassword) => {
+        if (!currentUser) throw new Error("Sign in before changing your password.");
+        if (newPassword.length < 8) throw new Error("Use at least 8 characters for your new password.");
+        const account = users.find((user) => user.id === currentUser.id && user.active);
+        if (!account) throw new Error("Your account could not be found.");
+        if (await hashPassword(currentPassword) !== account.passwordHash) throw new Error("The current password is incorrect.");
+        const passwordHash = await hashPassword(newPassword);
+        setUsers((prev) => prev.map((user) => user.id === currentUser.id ? { ...user, passwordHash } : user));
+        setCurrentUser((user) => user?.id === currentUser.id ? { ...user, passwordHash } : user);
+        sessionStorage.removeItem("rica-api-force-password-change");
+        log("edit", "users", `Changed password for ${currentUser.email}`);
       },
       logout: () => {
         const token = localStorage.getItem("rica-api-access-token");

@@ -116,7 +116,7 @@ export function UploadPage() {
         <div className="mt-4 rounded-2xl border border-slate-200 p-4">
           <div className="flex items-center gap-2"><LinkIcon size={17} className="text-teal-700" /><h3 className="font-semibold">Import from URL</h3></div>
           <div className="mt-3 flex flex-col gap-2 sm:flex-row"><input value={url} onChange={(e) => setUrl(e.target.value)} placeholder="https://example.com/attendance.xlsx" className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none focus:ring-4 focus:ring-teal-600/20" /><Button type="button" onClick={() => void loadUrl()} disabled={busy || !url.trim()}>{busy ? "Loading…" : "Load URL"}</Button></div>
-          <p className="mt-2 text-xs text-slate-500">The source must allow browser CORS access. After preview, the fetched file is sent to the RICA backend when API mode is configured.</p>
+          <p className="mt-2 text-xs text-slate-500">The source must allow browser CORS access. After preview, the file is imported into this browser's local RICA data store.</p>
         </div>
         <div className="mt-4 flex flex-wrap gap-2"><Button variant="secondary" onClick={downloadImportTemplate}>Download template</Button></div>
         {status && <p role="status" className="mt-4 rounded-xl bg-emerald-50 px-4 py-3 text-sm text-emerald-800">{status}</p>}

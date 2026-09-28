@@ -1,10 +1,9 @@
 import { NavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Activity, AlertTriangle, Building2, CalendarDays, ClipboardCheck, FileSpreadsheet, LayoutDashboard, LogOut, Shield, Upload, Users, UserCog, Clock3, ScrollText, BarChart3, Database, Menu, X, KeyRound } from "lucide-react";
 import { useApp } from "../data/store";
 import { can } from "../lib/permissions";
 import { cn, roleLabel } from "../lib/utils";
-import { apiConfigured, apiRequest } from "../lib/api";
 
 const nav = [
   { to: "/", label: "Dashboard", icon: LayoutDashboard },
@@ -30,17 +29,7 @@ export function AppShell() {
   const navigate = useNavigate();
   const location = useLocation();
   const [mobileOpen, setMobileOpen] = useState(false);
-  const [apiOnline, setApiOnline] = useState<boolean | null>(null);
   const openFlags = scopedAnomalies().filter((a) => !a.resolved).length;
-
-  useEffect(() => {
-    if (!apiConfigured) return;
-    let active = true;
-    const check = () => void apiRequest("/health").then(() => { if (active) setApiOnline(true); }).catch(() => { if (active) setApiOnline(false); });
-    check();
-    const timer = window.setInterval(check, 30000);
-    return () => { active = false; window.clearInterval(timer); };
-  }, []);
 
   const visibleNav = nav.filter((item) => !item.feature || (currentUser && can(currentUser.role, item.feature)));
 
@@ -75,7 +64,7 @@ export function AppShell() {
       <div className="flex min-w-0 flex-1 flex-col">
         <header className="sticky top-0 z-30 flex items-center justify-between border-b border-slate-200 bg-white/90 px-4 py-3 backdrop-blur lg:px-8">
           <div className="flex min-w-0 items-center gap-2"><button className="rounded-lg p-2 text-slate-600 hover:bg-slate-100 lg:hidden" onClick={() => setMobileOpen(true)} aria-label="Open navigation"><Menu size={20} /></button><div className="flex items-center gap-2 text-sm text-slate-500"><Shield size={16} className="text-teal-700" /><span className="truncate">Role-based access · {currentUser ? roleLabel(currentUser.role) : ""}</span></div></div>
-          <div className="flex min-w-0 items-center gap-2 sm:gap-3">{apiConfigured && <span className={cn("hidden rounded-full px-2 py-1 text-[10px] font-semibold sm:inline-flex", apiOnline === true ? "bg-emerald-50 text-emerald-700" : apiOnline === false ? "bg-rose-50 text-rose-700" : "bg-slate-100 text-slate-500")}>{apiOnline === true ? "API connected" : apiOnline === false ? "API offline" : "Connecting"}</span>}{openFlags > 0 && <button onClick={() => navigate("/verification")} className="hidden rounded-full bg-amber-50 px-3 py-1 text-xs font-semibold text-amber-800 sm:block">{openFlags} anomalies to review</button>}<div className="hidden min-w-0 text-right sm:block"><p className="text-sm font-semibold text-slate-800">{currentUser?.name}</p><p className="max-w-[240px] truncate text-xs text-slate-500">{currentUser?.email}</p></div><button onClick={() => { logout(); navigate("/login"); }} className="rounded-lg p-2 text-slate-500 hover:bg-slate-100 lg:hidden" title="Sign out"><LogOut size={17} /></button></div>
+          <div className="flex min-w-0 items-center gap-2 sm:gap-3">{openFlags > 0 && <button onClick={() => navigate("/verification")} className="hidden rounded-full bg-amber-50 px-3 py-1 text-xs font-semibold text-amber-800 sm:block">{openFlags} anomalies to review</button>}<div className="hidden min-w-0 text-right sm:block"><p className="text-sm font-semibold text-slate-800">{currentUser?.name}</p><p className="max-w-[240px] truncate text-xs text-slate-500">{currentUser?.email}</p></div><button onClick={() => { logout(); navigate("/login"); }} className="rounded-lg p-2 text-slate-500 hover:bg-slate-100 lg:hidden" title="Sign out"><LogOut size={17} /></button></div>
         </header>
         <main className="min-w-0 flex-1 px-4 py-6 sm:px-5 lg:px-8"><Outlet /></main>
       </div>
