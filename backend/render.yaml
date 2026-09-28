@@ -1,0 +1,11 @@
+services:
+  - type: web
+    name: rica-attendance-backend # Your service name
+    runtime: python
+    plan: free
+    buildCommand: "pip install -r requirements.txt && prisma py fetch"
+    startCommand: "gunicorn run:app"
+    envVars:
+      - key: PRISMA_BINARY_CACHE_DIR
+        value: /opt/render/project/src/.binaries
+      # ... your other env vars (DATABASE_URL, etc.)

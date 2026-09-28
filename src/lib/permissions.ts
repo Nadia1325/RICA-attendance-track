@@ -15,7 +15,7 @@ export type Feature =
 const matrix: Record<Feature, Role[]> = {
   upload: ["admin"],
   verify: ["admin", "hou"],
-  leave: ["admin", "hou"],
+  leave: ["admin", "hod", "hou"],
   viewAll: ["admin", "director"],
   viewDept: ["admin", "hod", "hou", "director"],
   viewUnit: ["admin", "hod", "hou", "director"],

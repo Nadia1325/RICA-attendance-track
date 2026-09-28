@@ -1,32 +1,37 @@
 import type { ReactNode } from "react";
-import { Navigate, Route, Routes } from "react-router-dom";
+import { lazy, Suspense } from "react";
+import { Navigate, Route, Routes, useLocation } from "react-router-dom";
 import { AppShell } from "./components/AppShell";
 import { useApp } from "./data/store";
-import { LoginPage } from "./pages/LoginPage";
-import { DashboardPage } from "./pages/DashboardPage";
-import { UploadPage } from "./pages/UploadPage";
-import { RawAttendancePage } from "./pages/RawAttendancePage";
-import { VerificationPage } from "./pages/VerificationPage";
-import { AttendancePage } from "./pages/AttendancePage";
-import { LeavesPage } from "./pages/LeavesPage";
-import { DailyReportPage } from "./pages/DailyReportPage";
-import { MonthlyReportPage } from "./pages/MonthlyReportPage";
-import { PerformancePage } from "./pages/PerformancePage";
-import { EmployeesPage } from "./pages/EmployeesPage";
-import { OrganizationPage } from "./pages/OrganizationPage";
-import { ShiftsPage } from "./pages/ShiftsPage";
-import { HolidaysPage } from "./pages/HolidaysPage";
-import { UsersPage } from "./pages/UsersPage";
-import { AuditPage } from "./pages/AuditPage";
+const LoginPage = lazy(() => import("./pages/LoginPage").then((m) => ({ default: m.LoginPage })));
+const DashboardPage = lazy(() => import("./pages/DashboardPage").then((m) => ({ default: m.DashboardPage })));
+const UploadPage = lazy(() => import("./pages/UploadPage").then((m) => ({ default: m.UploadPage })));
+const RawAttendancePage = lazy(() => import("./pages/RawAttendancePage").then((m) => ({ default: m.RawAttendancePage })));
+const VerificationPage = lazy(() => import("./pages/VerificationPage").then((m) => ({ default: m.VerificationPage })));
+const AttendancePage = lazy(() => import("./pages/AttendancePage").then((m) => ({ default: m.AttendancePage })));
+const LeavesPage = lazy(() => import("./pages/LeavesPage").then((m) => ({ default: m.LeavesPage })));
+const DailyReportPage = lazy(() => import("./pages/DailyReportPage").then((m) => ({ default: m.DailyReportPage })));
+const MonthlyReportPage = lazy(() => import("./pages/MonthlyReportPage").then((m) => ({ default: m.MonthlyReportPage })));
+const PerformancePage = lazy(() => import("./pages/PerformancePage").then((m) => ({ default: m.PerformancePage })));
+const EmployeesPage = lazy(() => import("./pages/EmployeesPage").then((m) => ({ default: m.EmployeesPage })));
+const OrganizationPage = lazy(() => import("./pages/OrganizationPage").then((m) => ({ default: m.OrganizationPage })));
+const ShiftsPage = lazy(() => import("./pages/ShiftsPage").then((m) => ({ default: m.ShiftsPage })));
+const HolidaysPage = lazy(() => import("./pages/HolidaysPage").then((m) => ({ default: m.HolidaysPage })));
+const UsersPage = lazy(() => import("./pages/UsersPage").then((m) => ({ default: m.UsersPage })));
+const AuditPage = lazy(() => import("./pages/AuditPage").then((m) => ({ default: m.AuditPage })));
+const PasswordPage = lazy(() => import("./pages/PasswordPage").then((m) => ({ default: m.PasswordPage })));
 
 function Guard({ children }: { children: ReactNode }) {
   const { currentUser } = useApp();
+  const location = useLocation();
   if (!currentUser) return <Navigate to="/login" replace />;
+  if (sessionStorage.getItem("rica-api-force-password-change") === "1" && location.pathname !== "/account/password") return <Navigate to="/account/password" replace />;
   return children;
 }
 
 export default function App() {
   return (
+    <Suspense fallback={<div className="flex min-h-screen items-center justify-center text-sm font-medium text-slate-500">Loading RICA Attendance…</div>}>
     <Routes>
       <Route path="/login" element={<LoginPage />} />
       <Route
@@ -51,8 +56,10 @@ export default function App() {
         <Route path="/holidays" element={<HolidaysPage />} />
         <Route path="/users" element={<UsersPage />} />
         <Route path="/audit" element={<AuditPage />} />
+        <Route path="/account/password" element={<PasswordPage />} />
       </Route>
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
+    </Suspense>
   );
 }

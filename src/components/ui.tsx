@@ -18,7 +18,7 @@ export function Button({
   return (
     <button
       className={cn(
-        "inline-flex items-center justify-center gap-2 rounded-lg px-3.5 py-2 text-sm font-semibold transition disabled:opacity-50",
+        "inline-flex max-w-full items-center justify-center gap-2 rounded-lg px-3 py-1.5 text-xs font-semibold transition disabled:opacity-50 sm:text-sm",
         styles,
         className,
       )}
@@ -145,12 +145,12 @@ export function PageHeader({
   actions?: ReactNode;
 }) {
   return (
-    <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-      <div>
-        <h1 className="text-2xl font-bold tracking-tight text-slate-900">{title}</h1>
-        {subtitle && <p className="mt-1 text-sm text-slate-500">{subtitle}</p>}
+    <div className="mb-5 flex min-w-0 flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+      <div className="min-w-0">
+        <h1 className="break-words text-xl font-bold tracking-tight text-slate-900 sm:text-2xl">{title}</h1>
+        {subtitle && <p className="mt-1 max-w-3xl text-sm leading-5 text-slate-500">{subtitle}</p>}
       </div>
-      {actions}
+      {actions && <div className="flex max-w-full flex-wrap items-center gap-2">{actions}</div>}
     </div>
   );
 }
@@ -167,9 +167,9 @@ export function Stat({
   accent?: string;
 }) {
   return (
-    <Card className="p-5">
+    <Card className="min-w-0 p-4 sm:p-5">
       <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">{label}</p>
-      <p className={cn("mt-2 text-2xl font-bold", accent ?? "text-slate-900")}>{value}</p>
+      <p className={cn("mt-2 text-xl font-bold sm:text-2xl", accent ?? "text-slate-900")}>{value}</p>
       {hint && <p className="mt-1 text-xs text-slate-500">{hint}</p>}
     </Card>
   );

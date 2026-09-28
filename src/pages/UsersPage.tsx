@@ -1,10 +1,11 @@
 import { FormEvent, useState } from "react";
-import { departments, units, useApp } from "../data/store";
+import { units, useApp } from "../data/store";
 import { can } from "../lib/permissions";
 import { roleLabel } from "../lib/utils";
 import { Badge, Button, Card, Input, PageHeader, Select } from "../components/ui";
 import type { Role } from "../types";
 import { KeyRound, Trash2, UserPlus } from "lucide-react";
+import { apiConfigured, apiRequest } from "../lib/api";
 
 const matrix = [
   ["Upload raw data", "Yes", "No", "No", "No"],
@@ -18,7 +19,7 @@ const matrix = [
 ];
 
 export function UsersPage() {
-  const { currentUser, users, addUser, resetUserPassword, deleteUser } = useApp();
+  const { currentUser, users, addUser, updateUser, resetUserPassword, deleteUser, departments } = useApp();
   const allowed = currentUser && can(currentUser.role, "manageUsers");
   const [open, setOpen] = useState(false);
   const [resetFor, setResetFor] = useState<string | null>(null);
@@ -54,13 +55,34 @@ export function UsersPage() {
     const fd = new FormData(e.currentTarget);
     const password = String(fd.get("newPassword"));
     if (password.length < 8) { setError("New password must contain at least 8 characters."); return; }
-    await resetUserPassword(id, password);
-    setResetFor(null); setMessage("Password reset successfully. The new password is active immediately.");
+    try { await resetUserPassword(id, password); setResetFor(null); setMessage(apiConfigured ? "Temporary password set. The user will be required to change it at their next sign-in." : "Password reset successfully."); }
+    catch (err) { setError(err instanceof Error ? err.message : "Unable to reset the password."); }
   }
 
-  function remove(id: string, name: string) {
-    if (!window.confirm(`Delete ${name}? This account will immediately lose access and will no longer be able to log in.`)) return;
-    try { deleteUser(id); setMessage(`${name} was deleted and can no longer log in.`); } catch (err) { setError(err instanceof Error ? err.message : "Unable to delete user."); }
+  async function remove(id: string, name: string) {
+    if (!window.confirm(`${apiConfigured ? "Deactivate" : "Delete"} ${name}? This account will lose access.`)) return;
+    try { await deleteUser(id); setMessage(`${name}'s account was deactivated.`); } catch (err) { setError(err instanceof Error ? err.message : "Unable to deactivate user."); }
+  }
+
+  async function editUser(id: string, name: string, email: string) {
+    let currentName = name;
+    let currentEmail = email;
+    if (apiConfigured) {
+      try {
+        const token = localStorage.getItem("rica-api-access-token");
+        if (!token) throw new Error("Sign in again before managing users.");
+        const details = await apiRequest<{ full_name?: string; email?: string }>(`/api/users/${encodeURIComponent(id)}`, {}, token);
+        currentName = details.full_name ?? currentName;
+        currentEmail = details.email ?? currentEmail;
+      } catch (error) { setError(error instanceof Error ? error.message : "Unable to load user details."); return; }
+    }
+    const nextName = window.prompt("Full name", currentName);
+    if (nextName === null) return;
+    const nextEmail = window.prompt("Email address", currentEmail);
+    if (nextEmail === null) return;
+    setError("");
+    try { await updateUser(id, { name: nextName.trim(), email: nextEmail.trim() }); setMessage("User details updated."); }
+    catch (err) { setError(err instanceof Error ? err.message : "Unable to update user details."); }
   }
 
   if (!allowed) return <Card className="p-8"><h1 className="text-lg font-semibold">User management restricted</h1><p className="mt-2 text-sm text-slate-500">Only Admin can manage users and system configuration.</p></Card>;
@@ -75,7 +97,7 @@ export function UsersPage() {
           <Input name="name" placeholder="Full name" required />
           <Input name="email" type="email" placeholder="Gmail / work email" required />
           <Input name="password" type="password" placeholder="Initial password" minLength={8} required />
-          <Select name="role"><option value="admin">Admin</option><option value="hod">Head of Department</option><option value="hou">Head of Office/Unit</option><option value="director">Director</option></Select>
+          <Select name="role"><option value="admin">Admin</option><option value="hod">Head of Department</option>{!apiConfigured && <option value="hou">Head of Office/Unit</option>}<option value="director">Director</option></Select>
           <Select name="departmentId"><option value="">Department</option>{departments.map((d) => <option key={d.id} value={d.id}>{d.name}</option>)}</Select>
           <Select name="unitId"><option value="">Office / Unit</option>{units.map((u) => <option key={u.id} value={u.id}>{u.name}</option>)}</Select>
           <Button type="submit" className="sm:col-span-2 lg:col-span-1">Create account</Button>
@@ -90,10 +112,11 @@ export function UsersPage() {
             <td className="px-4 py-3">{u.email}</td>
             <td className="px-4 py-3"><Badge tone="teal">{roleLabel(u.role)}</Badge></td>
             <td className="px-4 py-3 text-slate-500">{departments.find((d) => d.id === u.departmentId)?.name ?? "Institution-wide"}{u.unitId ? ` · ${units.find((x) => x.id === u.unitId)?.name ?? ""}` : ""}</td>
-            <td className="px-4 py-3"><Badge tone={u.active ? "emerald" : "rose"}>{u.active ? "Active" : "Deleted"}</Badge></td>
+            <td className="px-4 py-3"><Badge tone={u.active ? "emerald" : "rose"}>{u.active ? "Active" : apiConfigured ? "Inactive" : "Deleted"}</Badge></td>
             <td className="px-4 py-3"><div className="flex gap-2">
+              <Button variant="secondary" onClick={() => void editUser(u.id, u.name, u.email)}>Edit details</Button>
               <Button variant="secondary" onClick={() => { setResetFor(u.id); setError(""); }}><KeyRound size={15} />Reset password</Button>
-              <Button variant="danger" onClick={() => remove(u.id, u.name)} disabled={u.id === currentUser?.id}><Trash2 size={15} />Delete</Button>
+              <Button variant="danger" onClick={() => void remove(u.id, u.name)} disabled={u.id === currentUser?.id || !u.active}><Trash2 size={15} />{apiConfigured ? "Deactivate" : "Delete"}</Button>
             </div>{resetFor === u.id && <form onSubmit={(e) => void onReset(e, u.id)} className="mt-3 flex max-w-md gap-2"><Input name="newPassword" type="password" minLength={8} placeholder="New password (8+ chars)" required /><Button type="submit">Save</Button><Button type="button" variant="ghost" onClick={() => setResetFor(null)}>Cancel</Button></form>}</td>
           </tr>)}</tbody>
         </table></div>

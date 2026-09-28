@@ -1,36 +1,35 @@
 import { FormEvent, useMemo, useState } from "react";
 import { Pencil, Trash2 } from "lucide-react";
-import { departments as seedDepartments, units, useApp } from "../data/store";
+import { units, useApp } from "../data/store";
+import { apiConfigured } from "../lib/api";
 import { Badge, Button, Card, Input, PageHeader, Select } from "../components/ui";
 import { can } from "../lib/permissions";
 import type { Employee } from "../types";
 
-const blank: Omit<Employee, "id"> = { personId: "", name: "", departmentId: "d-admin", unitId: "u-exec", position: "", gender: "Female", shiftId: "s-day", status: "Active" };
-
 export function EmployeesPage() {
   const { currentUser, scopedEmployees, shifts, addEmployee, updateEmployee, setEmployeeStatus, deleteEmployee, departments } = useApp();
-  const canManage = currentUser?.role === "admin" && can(currentUser.role, "manageUsers");
+  const canManage = !apiConfigured && currentUser?.role === "admin" && can(currentUser.role, "manageUsers");
   const people = scopedEmployees();
   const [q, setQ] = useState("");
   const [status, setStatus] = useState<"all" | Employee["status"]>("all");
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<Employee | null>(null);
-  const [draft, setDraft] = useState<Omit<Employee, "id">>(blank);
+  const [draft, setDraft] = useState<Omit<Employee, "id">>({ personId: "", name: "", departmentId: departments[0]?.id ?? "", unitId: "", position: "", gender: "Female", shiftId: shifts[0]?.id ?? "", status: "Active" });
 
   const filtered = useMemo(() => people.filter((e) => `${e.name} ${e.personId} ${e.position}`.toLowerCase().includes(q.toLowerCase().trim()) && (status === "all" || e.status === status)), [people, q, status]);
-  const deptList = departments.length ? departments : seedDepartments;
+  const deptList = departments;
 
   function submit(e: FormEvent) {
     e.preventDefault();
     if (editing) updateEmployee(editing.id, draft);
     else addEmployee(draft);
-    setOpen(false); setEditing(null); setDraft(blank);
+    setOpen(false); setEditing(null); setDraft({ personId: "", name: "", departmentId: departments[0]?.id ?? "", unitId: "", position: "", gender: "Female", shiftId: shifts[0]?.id ?? "", status: "Active" });
   }
   function startEdit(e: Employee) { setEditing(e); setDraft({ ...e }); setOpen(true); }
   function remove(e: Employee) { if (window.confirm(`Delete ${e.name} (${e.personId})? This removes the employee from the master list.`)) deleteEmployee(e.id); }
 
   return <div>
-    <PageHeader title="Employee master" subtitle="Search, maintain employee identity, status, department, unit and shift. Admin controls all employee records." actions={canManage ? <Button onClick={() => { setEditing(null); setDraft(blank); setOpen((v) => !v); }}>{open ? "Close form" : "Add employee"}</Button> : undefined} />
+    <PageHeader title="Employee master" subtitle={apiConfigured ? "Employee records are loaded from the RICA backend." : "Search, maintain employee identity, status, department, unit and shift. Admin controls all employee records."} actions={canManage ? <Button onClick={() => { setEditing(null); setDraft({ personId: "", name: "", departmentId: departments[0]?.id ?? "", unitId: "", position: "", gender: "Female", shiftId: shifts[0]?.id ?? "", status: "Active" }); setOpen((v) => !v); }}>{open ? "Close form" : "Add employee"}</Button> : undefined} />
     <div className="mb-4 flex flex-col gap-3 sm:flex-row"><Input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search employee name, ID or position…" /><Select className="sm:max-w-xs" value={status} onChange={(e) => setStatus(e.target.value as typeof status)}><option value="all">All status</option><option value="Active">Active</option><option value="Inactive">Inactive</option></Select></div>
     {open && canManage && <Card className="mb-6 p-5"><div className="mb-4"><h2 className="font-semibold">{editing ? "Edit employee" : "Add employee"}</h2><p className="text-xs text-slate-500">Employee information changes are recorded in the audit trail.</p></div><form className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4" onSubmit={submit}>
       <Input value={draft.personId} onChange={(e) => setDraft({ ...draft, personId: e.target.value })} placeholder="Employee / Person ID" required />

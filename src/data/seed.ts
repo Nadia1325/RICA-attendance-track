@@ -56,12 +56,18 @@ export const users: User[] = [
 ];
 
 export const departments: Department[] = [
-  { id: "d-admin", name: "Administration", code: "ADM", headId: "e-01" },
-  { id: "d-hr", name: "Human Resources", code: "HR", headId: "e-04" },
-  { id: "d-fin", name: "Finance", code: "FIN", headId: "e-07" },
-  { id: "d-ops", name: "Farm Operations", code: "OPS", headId: "e-10" },
-  { id: "d-res", name: "Research & Training", code: "RES", headId: "e-16" },
-  { id: "d-ict", name: "ICT", code: "ICT", headId: "e-19" },
+  { id: "d-rica", name: "RICA", code: "RICA" },
+  { id: "d-admin", name: "RICA/CCRU Office", code: "CCRU", headId: "e-01" },
+  { id: "d-dg", name: "RICA/DG Office", code: "DG" },
+  { id: "d-fin", name: "RICA/Finance Office", code: "FIN", headId: "e-07" },
+  { id: "d-fppiu", name: "RICA/FPPIU Office", code: "FPPIU" },
+  { id: "d-hod", name: "RICA/HoD Office", code: "HOD" },
+  { id: "d-hr", name: "RICA/HR Office", code: "HR", headId: "e-04" },
+  { id: "d-itu", name: "RICA/ITU Office", code: "ITU" },
+  { id: "d-imu", name: "RICA/IMU Office", code: "IMU" },
+  { id: "d-ops", name: "RICA/RL Office", code: "RL", headId: "e-10" },
+  { id: "d-sdc", name: "RICA/SDC Office", code: "SDC" },
+  { id: "d-young", name: "RICA/YOUNG Professional", code: "YOUNG" },
 ];
 
 export const units: Unit[] = [
@@ -72,8 +78,8 @@ export const units: Unit[] = [
   { id: "u-acc", name: "Accounts", departmentId: "d-fin", headId: "e-07" },
   { id: "u-farm", name: "Crop Production", departmentId: "d-ops", headId: "e-10" },
   { id: "u-liv", name: "Livestock", departmentId: "d-ops", headId: "e-13" },
-  { id: "u-lab", name: "Research Lab", departmentId: "d-res", headId: "e-16" },
-  { id: "u-sys", name: "Systems", departmentId: "d-ict", headId: "e-19" },
+  { id: "u-lab", name: "Research Lab", departmentId: "d-fppiu", headId: "e-16" },
+  { id: "u-sys", name: "Systems", departmentId: "d-itu", headId: "e-19" },
 ];
 
 export const shifts: Shift[] = [
@@ -119,11 +125,11 @@ export const employees: Employee[] = [
   { id: "e-13", personId: "RICA-1103", name: "Olive Mukamana", departmentId: "d-ops", unitId: "u-liv", position: "Livestock Officer", gender: "Female", shiftId: "s-field", status: "Active" },
   { id: "e-14", personId: "RICA-1104", name: "Emile Nkurunziza", departmentId: "d-ops", unitId: "u-liv", position: "Veterinary Technician", gender: "Male", shiftId: "s-field", status: "Active" },
   { id: "e-15", personId: "RICA-1105", name: "Josiane Uwimana", departmentId: "d-ops", unitId: "u-farm", position: "Field Supervisor", gender: "Female", shiftId: "s-field", status: "Active" },
-  { id: "e-16", personId: "RICA-1160", name: "Dr. Alice Mutesi", departmentId: "d-res", unitId: "u-lab", position: "Research Lead", gender: "Female", shiftId: "s-flex", status: "Active" },
-  { id: "e-17", personId: "RICA-1161", name: "Kevin Niyonshuti", departmentId: "d-res", unitId: "u-lab", position: "Research Associate", gender: "Male", shiftId: "s-day", status: "Active" },
-  { id: "e-18", personId: "RICA-1162", name: "Nadia Umutoni", departmentId: "d-res", unitId: "u-lab", position: "Training Officer", gender: "Female", shiftId: "s-day", status: "Active" },
-  { id: "e-19", personId: "RICA-1190", name: "Patrick Gasana", departmentId: "d-ict", unitId: "u-sys", position: "ICT Manager", gender: "Male", shiftId: "s-flex", status: "Active" },
-  { id: "e-20", personId: "RICA-1191", name: "Linda Imena", departmentId: "d-ict", unitId: "u-sys", position: "Systems Analyst", gender: "Female", shiftId: "s-day", status: "Active" },
+  { id: "e-16", personId: "RICA-1160", name: "Dr. Alice Mutesi", departmentId: "d-fppiu", unitId: "u-lab", position: "Research Lead", gender: "Female", shiftId: "s-flex", status: "Active" },
+  { id: "e-17", personId: "RICA-1161", name: "Kevin Niyonshuti", departmentId: "d-fppiu", unitId: "u-lab", position: "Research Associate", gender: "Male", shiftId: "s-day", status: "Active" },
+  { id: "e-18", personId: "RICA-1162", name: "Nadia Umutoni", departmentId: "d-fppiu", unitId: "u-lab", position: "Training Officer", gender: "Female", shiftId: "s-day", status: "Active" },
+  { id: "e-19", personId: "RICA-1190", name: "Patrick Gasana", departmentId: "d-itu", unitId: "u-sys", position: "ICT Manager", gender: "Male", shiftId: "s-flex", status: "Active" },
+  { id: "e-20", personId: "RICA-1191", name: "Linda Imena", departmentId: "d-itu", unitId: "u-sys", position: "Systems Analyst", gender: "Female", shiftId: "s-day", status: "Active" },
 ];
 
 export const holidays: Holiday[] = [
@@ -169,8 +175,8 @@ export function buildSeedAttendance() {
   let n = 1;
 
   employees.forEach((emp) => {
-    const dept = departments.find((d) => d.id === emp.departmentId)!;
-    const shift = shifts.find((s) => s.id === emp.shiftId)!;
+    const dept = departments.find((d) => d.id === emp.departmentId) ?? departments[0];
+    const shift = shifts.find((s) => s.id === emp.shiftId) ?? shifts[0];
     dates.forEach((date, di) => {
       const seed = hash(`${emp.personId}-${date}`);
       const lateJitter = seed % 23;
@@ -420,7 +426,7 @@ export const leaves: LeaveEntry[] = [
     id: "lv-2",
     personId: "RICA-1162",
     employeeName: "Nadia Umutoni",
-    departmentId: "d-res",
+    departmentId: "d-fppiu",
     unitId: "u-lab",
     type: "Business Trip",
     startDate: "2026-09-25",

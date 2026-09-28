@@ -3,6 +3,8 @@ import { useNavigate } from "react-router-dom";
 import { useApp } from "../data/store";
 import { Button, Card, Input } from "../components/ui";
 import { Eye, EyeOff, Fingerprint } from "lucide-react";
+import { apiConfigured } from "../lib/api";
+import { apiRequest } from "../lib/api";
 
 const demos = [
   { identifier: "admin@rica.rw", password: "Admin@123", label: "Admin · HR/System" },
@@ -20,6 +22,12 @@ export function LoginPage() {
   const [error, setError] = useState("");
   const [showForgot, setShowForgot] = useState(false);
   const [busy, setBusy] = useState(false);
+  const [recoveryEmail, setRecoveryEmail] = useState("");
+  const [recoveryToken, setRecoveryToken] = useState("");
+  const [recoveryPassword, setRecoveryPassword] = useState("");
+  const [recoveryConfirm, setRecoveryConfirm] = useState("");
+  const [recoverySent, setRecoverySent] = useState(false);
+  const [recoveryMessage, setRecoveryMessage] = useState("");
 
   async function onSubmit(e: FormEvent) {
     e.preventDefault();
@@ -32,6 +40,8 @@ export function LoginPage() {
         return;
       }
       navigate("/");
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : "Unable to sign in. Please try again.");
     } finally {
       setBusy(false);
     }
@@ -43,6 +53,30 @@ export function LoginPage() {
     setError("");
     const ok = await login(demo.identifier, demo.password);
     if (ok) navigate("/");
+  }
+
+  async function requestReset(e: FormEvent) {
+    e.preventDefault(); setError(""); setRecoveryMessage(""); setBusy(true);
+    try {
+      const result = await apiRequest<{ message?: string; dev_token?: string }>("/api/auth/forgot-password", { method: "POST", body: JSON.stringify({ identifier: recoveryEmail.trim() }) });
+      setRecoverySent(true);
+      if (result.dev_token) setRecoveryToken(result.dev_token);
+      setRecoveryMessage(result.dev_token ? "Development reset token received. Set a new password below." : "If an account matches that email or username, reset instructions have been sent. Enter the token from that message below.");
+    } catch (cause) { setError(cause instanceof Error ? cause.message : "Unable to request a password reset."); }
+    finally { setBusy(false); }
+  }
+
+  async function resetPassword(e: FormEvent) {
+    e.preventDefault(); setError(""); setRecoveryMessage("");
+    if (recoveryPassword.length < 8) { setError("Use at least 8 characters for your new password."); return; }
+    if (recoveryPassword !== recoveryConfirm) { setError("The new password and confirmation do not match."); return; }
+    setBusy(true);
+    try {
+      await apiRequest("/api/auth/reset-password", { method: "POST", body: JSON.stringify({ token: recoveryToken.trim(), new_password: recoveryPassword }) });
+      setShowForgot(false); setRecoverySent(false); setRecoveryToken(""); setRecoveryPassword(""); setRecoveryConfirm("");
+      setRecoveryMessage("Password reset successfully. Sign in with your new password.");
+    } catch (cause) { setError(cause instanceof Error ? cause.message : "Unable to reset your password."); }
+    finally { setBusy(false); }
   }
 
   return (
@@ -97,21 +131,22 @@ export function LoginPage() {
             <button type="button" onClick={() => setShowForgot((v) => !v)} className="mt-4 text-sm font-semibold text-teal-700 hover:text-teal-800">
               Forgot your password?
             </button>
-            {showForgot && (
-              <div className="mt-3 rounded-xl bg-amber-50 px-4 py-3 text-xs leading-5 text-amber-900">
-                For this frontend-only system, password recovery is controlled by the Admin. Ask the Admin to reset your account from <strong>Users & config</strong>; the old password will stop working immediately.
-              </div>
-            )}
+            {recoveryMessage && <p role="status" className="mt-3 rounded-xl bg-emerald-50 px-4 py-3 text-xs leading-5 text-emerald-800">{recoveryMessage}</p>}
+            {showForgot && <div className="mt-3 rounded-xl border border-slate-200 p-4">
+              {!apiConfigured ? <p className="text-xs leading-5 text-amber-900">Password recovery is available when the RICA backend is configured. Ask your Admin to reset a demo account password.</p> : <>
+                {!recoverySent ? <form className="space-y-3" onSubmit={(e) => void requestReset(e)}><p className="text-sm font-semibold">Request password reset</p><Input type="email" placeholder="Account email" autoComplete="email" required value={recoveryEmail} onChange={(e) => setRecoveryEmail(e.target.value)} /><Button disabled={busy}>{busy ? "Requesting…" : "Send reset instructions"}</Button></form> : <form className="space-y-3" onSubmit={(e) => void resetPassword(e)}><p className="text-sm font-semibold">Choose a new password</p><Input placeholder="Reset token from your email" required value={recoveryToken} onChange={(e) => setRecoveryToken(e.target.value)} /><Input type="password" placeholder="New password (at least 8 characters)" minLength={8} autoComplete="new-password" required value={recoveryPassword} onChange={(e) => setRecoveryPassword(e.target.value)} /><Input type="password" placeholder="Confirm new password" minLength={8} autoComplete="new-password" required value={recoveryConfirm} onChange={(e) => setRecoveryConfirm(e.target.value)} /><Button disabled={busy}>{busy ? "Resetting…" : "Reset password"}</Button></form>}
+              </>}
+            </div>}
 
             <div className="mt-6 space-y-2">
-              <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">Demo accounts</p>
-              {demos.map((d) => (
+              {!apiConfigured && <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">Demo accounts</p>}
+              {!apiConfigured && demos.map((d) => (
                 <button key={d.identifier} type="button" onClick={() => void quickLogin(d)} className="flex w-full items-center justify-between rounded-xl border border-slate-200 px-3 py-2 text-left text-sm hover:bg-teal-50">
                   <span className="font-medium text-slate-800">{d.label}</span>
                   <span className="text-xs text-slate-500">{d.identifier}</span>
                 </button>
               ))}
-              <p className="pt-2 text-[11px] text-slate-400">Demo passwords are for this frontend prototype only.</p>
+              {!apiConfigured && <p className="pt-2 text-[11px] text-slate-400">Demo passwords are for this frontend prototype only.</p>}
             </div>
           </Card>
         </div>

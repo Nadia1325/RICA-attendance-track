@@ -1,23 +1,24 @@
 import { FormEvent, useState } from "react";
-import { departments, leaveTypes, units, useApp } from "../data/store";
+import { leaveTypes, units, useApp } from "../data/store";
 import { can } from "../lib/permissions";
 import { Badge, Button, Card, Input, PageHeader, Select } from "../components/ui";
 import type { LeaveType } from "../types";
 
 export function LeavesPage() {
-  const { currentUser, leaves, scopedEmployees, addLeave } = useApp();
+  const { currentUser, leaves, scopedEmployees, addLeave, departments } = useApp();
   const canEdit = currentUser && can(currentUser.role, "leave");
   const people = scopedEmployees();
   const visible = leaves.filter((l) => people.some((p) => p.personId === l.personId));
   const [open, setOpen] = useState(false);
+  const [error, setError] = useState("");
 
-  function onSubmit(e: FormEvent<HTMLFormElement>) {
+  async function onSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
     const fd = new FormData(e.currentTarget);
     const personId = String(fd.get("personId"));
     const emp = people.find((p) => p.personId === personId);
     if (!emp) return;
-    addLeave({
+    try { await addLeave({
       personId,
       employeeName: emp.name,
       departmentId: emp.departmentId,
@@ -27,7 +28,7 @@ export function LeavesPage() {
       endDate: String(fd.get("endDate")),
       reason: String(fd.get("reason")),
       status: "Approved",
-    });
+    }); } catch (cause) { setError(cause instanceof Error ? cause.message : "Unable to save leave."); return; }
     setOpen(false);
     e.currentTarget.reset();
   }
@@ -43,9 +44,10 @@ export function LeavesPage() {
           ) : undefined
         }
       />
+      {error && <p role="alert" className="mb-4 rounded-xl bg-rose-50 px-4 py-3 text-sm text-rose-800">{error}</p>}
       {open && canEdit && (
         <Card className="mb-6 p-5">
-          <form className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3" onSubmit={onSubmit}>
+          <form className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3" onSubmit={(event) => void onSubmit(event)}>
             <Select name="personId" required>
               {people.map((p) => (
                 <option key={p.id} value={p.personId}>

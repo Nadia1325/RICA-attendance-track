@@ -1,12 +1,13 @@
-import { useState, type ReactNode } from "react";
-import { departments, useApp } from "../data/store";
+import { useEffect, useState, type ReactNode } from "react";
+import { useApp } from "../data/store";
 import { can } from "../lib/permissions";
 import { Badge, Button, Card, DateField, Input, PageHeader, Select } from "../components/ui";
 import type { AttendanceFinal } from "../types";
+import { apiConfigured, apiRequest } from "../lib/api";
 
 export function VerificationPage() {
-  const { currentUser, scopedAnomalies, finals, verifyRecord } = useApp();
-  const allowed = currentUser && can(currentUser.role, "verify");
+  const { currentUser, scopedAnomalies, finals, verifyRecord, departments } = useApp();
+  const allowed = currentUser && can(currentUser.role, "verify") && (!apiConfigured || currentUser.role === "admin");
   const open = scopedAnomalies().filter((a) => !a.resolved);
   const [selected, setSelected] = useState(open[0]?.attendanceId ?? "");
   const [q, setQ] = useState("");
@@ -15,6 +16,33 @@ export function VerificationPage() {
   const record = finals.find((r) => r.id === selected);
   const [draft, setDraft] = useState<Partial<AttendanceFinal>>({});
   const [note, setNote] = useState("");
+  const [error, setError] = useState("");
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    if (!apiConfigured || !selected) return;
+    const token = localStorage.getItem("rica-api-access-token");
+    if (!token) return;
+    let active = true;
+    void apiRequest<Record<string, unknown>>(`/api/attendance/raw/${encodeURIComponent(selected)}`, {}, token)
+      .then((row) => {
+        if (!active) return;
+        const rawStatus = String(row.status ?? "").toUpperCase();
+        const status: AttendanceFinal["status"] = rawStatus === "A" ? "Absent" : rawStatus === "LV" ? "LV" : rawStatus === "#" ? "Weekend" : rawStatus === "HOLIDAY" ? "Holiday" : "Attended";
+        setDraft({ checkIn: String(row.check_in ?? ""), checkOut: String(row.check_out ?? ""), work: Number(row.work_min ?? 0), attended: Number(row.attended_min ?? 0), late: Number(row.late_min ?? 0), early: Number(row.early_min ?? 0), absent: Number(row.absent_min ?? 0), leave: Number(row.leave_min ?? 0), status });
+        setNote(String(row.notes ?? ""));
+      })
+      .catch((cause) => { if (active) setError(cause instanceof Error ? cause.message : "Unable to load the selected attendance row."); });
+    return () => { active = false; };
+  }, [selected]);
+
+  async function saveRecord(patch: Partial<AttendanceFinal>, message = note) {
+    if (!record) return;
+    setError(""); setSaving(true);
+    try { await verifyRecord(record.id, patch, message); setSelected(""); }
+    catch (cause) { setError(cause instanceof Error ? cause.message : "Unable to save this attendance correction."); }
+    finally { setSaving(false); }
+  }
 
   function load(id: string) {
     const r = finals.find((x) => x.id === id);
@@ -133,21 +161,18 @@ export function VerificationPage() {
               <Field label="Explanatory note">
                 <Input value={note} onChange={(e) => setNote(e.target.value)} placeholder="Why this correction was made" />
               </Field>
+              {error && <p role="alert" className="rounded-lg bg-rose-50 px-3 py-2 text-sm text-rose-700">{error}</p>}
               <div className="flex gap-2">
                 <Button
-                  onClick={() => {
-                    verifyRecord(record.id, draft, note);
-                    setSelected("");
-                  }}
+                  disabled={saving}
+                  onClick={() => void saveRecord(draft)}
                 >
-                  Save to verified records
+                  {saving ? "Saving…" : "Save to verified records"}
                 </Button>
                 <Button
                   variant="secondary"
-                  onClick={() => {
-                    verifyRecord(record.id, { status: "LV", leave: 480, attended: 0, work: 0 }, note || "Marked as leave");
-                    setSelected("");
-                  }}
+                  disabled={saving}
+                  onClick={() => void saveRecord({ status: "LV", leave: 480, attended: 0, work: 0 }, note || "Marked as leave")}
                 >
                   Convert to leave (LV)
                 </Button>

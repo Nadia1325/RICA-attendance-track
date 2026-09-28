@@ -1,9 +1,9 @@
 import { useState } from "react";
-import { departments, useApp } from "../data/store";
+import { useApp } from "../data/store";
 import { Badge, Card, DateField, Input, PageHeader } from "../components/ui";
 
 export function AttendancePage() {
-  const { scopedFinals } = useApp(); const [q,setQ]=useState(""); const [date,setDate]=useState(""); const rows=scopedFinals();
+  const { scopedFinals, departments } = useApp(); const [q,setQ]=useState(""); const [date,setDate]=useState(""); const rows=scopedFinals();
   const filtered=rows.filter(r=>`${r.name} ${r.personId} ${r.status}`.toLowerCase().includes(q.toLowerCase().trim())&&(!date||r.date===date));
   return <div><PageHeader title="Verified attendance" subtitle="Final database after HR/unit review. Search by employee or ID and use the calendar to inspect a specific day."/><div className="mb-4 grid gap-3 sm:grid-cols-2"><Input placeholder="Search employee name or Person ID…" value={q} onChange={e=>setQ(e.target.value)}/><DateField label="Attendance date" value={date} onChange={setDate}/></div><Card className="overflow-auto"><table className="min-w-[1000px] w-full text-left text-sm"><thead className="bg-slate-50 text-xs uppercase text-slate-500"><tr>{["Name","Dept","Date","In","Out","Late","Status","Verified","Notes"].map(h=><th key={h} className="px-4 py-2">{h}</th>)}</tr></thead><tbody>{filtered.map(r=><tr key={r.id} className="border-t border-slate-100"><td className="px-4 py-2"><p className="font-medium">{r.name}</p><p className="text-xs text-slate-500">{r.personId}</p></td><td className="px-4 py-2">{departments.find(d=>d.id===r.departmentId)?.name}</td><td className="px-4 py-2">{r.date} · {r.week}</td><td className="px-4 py-2">{r.checkIn||"—"}</td><td className="px-4 py-2">{r.checkOut||"—"}</td><td className="px-4 py-2">{r.late}</td><td className="px-4 py-2"><Badge tone={r.status==='Absent'?'rose':r.status==='LV'?'sky':'emerald'}>{r.status}</Badge></td><td className="px-4 py-2"><Badge tone={r.verified?'teal':'amber'}>{r.verified?'Yes':'Pending'}</Badge></td><td className="px-4 py-2 text-xs text-slate-500">{r.notes||"—"}</td></tr>)}{filtered.length===0&&<tr><td colSpan={9} className="px-4 py-10 text-center text-slate-500">No verified attendance records match your search.</td></tr>}</tbody></table></Card></div>;
 }

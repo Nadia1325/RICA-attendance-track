@@ -20,21 +20,24 @@ This update preserves the existing RICA visual language and page structure while
 - Fixed an existing Monthly Report variable-order TypeScript error.
 
 ## Demo accounts
+- These browser-only demo accounts are available only when `VITE_API_BASE_URL` is unset.
 - Admin: `admin@rica.rw` / `Admin@123`
 - Head of Department: `Jean Bosco Niyonzima` or `hod@rica.rw` / `HOD@123`
 - Head of Office/Unit: `hou@rica.rw` / `HOU@123`
 - Director: `director@rica.rw` / `Director@123`
 
-Change these passwords from the Admin Users & config page for actual use.
-
-## Important frontend-only limitation
-This is a frontend-only implementation. Passwords are hashed before browser storage, but browser-side authentication cannot provide the same security guarantees as a server-side identity system. For a real large-organization deployment, authentication, authorization, password reset, account deletion, audit integrity, and Excel import validation should be enforced by a backend/API and database as well.
+Do not use demo accounts for deployment. API mode authenticates against the Flask backend.
 
 ## Run
 ```bash
 npm install
 npm run dev
 ```
+
+## RICA backend connection
+The Flask backend source is in [backend](backend/README.md). For local integration, copy `.env.example` to `.env` in the project root (frontend) and set `VITE_API_BASE_URL=http://localhost:5000`. Start the backend using its setup instructions, then start Vite. For deployment, point this variable at the deployed backend origin and add the frontend origin to the backend's `CORS_ORIGINS`.
+
+API mode uses backend authentication, catalogs, attendance, leaves, batches, and Admin user/audit data. Admin imports are previewed in the browser and then sent as multipart `file` data to `/api/attendance/upload`; URL imports require the source to allow browser CORS access. Attendance corrections, leaves, holidays, shifts, departments, and user management use the backend's documented write routes. Signed-in users change their passwords at **Change password**; forgot/reset password uses the backend email token flow. The app refreshes access tokens using the backend refresh endpoint.
 
 For a clean environment, do not copy `node_modules` from another operating system; let npm install dependencies for the machine being used.
 
@@ -48,4 +51,4 @@ For a clean environment, do not copy `node_modules` from another operating syste
 - Raw Attendance now supports search, department filter, calendar day/month/year selection, and Excel exports for daily, monthly, and yearly periods.
 - Raw attendance is now scoped to the signed-in user's organization/department/unit boundary.
 - Existing visual design, navigation, colors, card system, and role boundaries were retained.
-- Frontend-only security note: authentication and authorization are persisted locally for prototype/demo use; production deployment should move credential validation and permission enforcement to a backend service/database.
+- Backend mode uses server-side authentication and authorization; browser-only localStorage persistence is retained for demo mode.
