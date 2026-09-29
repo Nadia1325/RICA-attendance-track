@@ -1,4 +1,5 @@
-import type { Role } from "../types";
+// src/lib/permissions.ts
+import type { Role } from "../types/types";
 
 export type Feature =
   | "upload"
@@ -14,23 +15,28 @@ export type Feature =
 
 const matrix: Record<Feature, Role[]> = {
   upload: ["admin"],
-  verify: ["admin", "hou"],
-  leave: ["admin", "hod", "hou"],
+  verify: ["admin"],
+  leave: ["admin", "hod"],
   viewAll: ["admin", "director"],
-  viewDept: ["admin", "hod", "hou", "director"],
-  viewUnit: ["admin", "hod", "hou", "director"],
-  dailyReport: ["admin", "hod", "hou", "director"],
-  monthlyReport: ["admin", "hod", "hou", "director"],
-  kpis: ["admin", "hod", "hou", "director"],
+  viewDept: ["admin", "hod", "director"],
+  viewUnit: ["admin", "hod", "director"],
+  dailyReport: ["admin", "hod", "director"],
+  monthlyReport: ["admin", "hod", "director"],
+  kpis: ["admin", "hod", "director"],
   manageUsers: ["admin"],
 };
 
-export function can(role: Role, feature: Feature) {
-  return matrix[feature].includes(role);
+/**
+ * Checks whether a user role has permission to access a specific feature.
+ */
+export function can(role: Role, feature: Feature): boolean {
+  return matrix[feature]?.includes(role) ?? false;
 }
 
-export function scopeLabel(role: Role) {
+/**
+ * Returns a human-readable string indicating data visibility scope based on role.
+ */
+export function scopeLabel(role: Role): string {
   if (role === "admin" || role === "director") return "All departments";
-  if (role === "hod") return "Own department";
-  return "Own office/unit";
+  return "Own department";
 }

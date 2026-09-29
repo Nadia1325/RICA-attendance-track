@@ -1,38 +1,50 @@
+// src/lib/excel.ts
 import * as XLSX from "xlsx";
-import type { AttendanceRaw } from "../types";
+import type { AttendanceRaw } from "../types/types";
 import { RAW_HEADERS } from "./utils";
 
-function cell(v: unknown) {
+function cell(v: unknown): string {
   if (v === null || v === undefined) return "";
   if (v instanceof Date) return v.toISOString().slice(0, 10);
   return String(v).trim();
 }
 
-function num(v: unknown) {
+function num(v: unknown): number {
   const n = Number(v);
   return Number.isFinite(n) ? n : 0;
 }
 
-export function parseRawWorkbook(buffer: ArrayBuffer, batchId: string) {
+/**
+ * Parses an uploaded Excel array buffer into raw attendance records on the client side.
+ * Useful for pre-upload preview or validation before submitting to the backend via RTK Query.
+ */
+export function parseRawWorkbook(buffer: ArrayBuffer, batchId: string): AttendanceRaw[] {
   const wb = XLSX.read(buffer, { type: "array", cellDates: true });
+  if (!wb.SheetNames.length) throw new Error("The workbook contains no sheets.");
+
   const sheet = wb.Sheets[wb.SheetNames[0]];
   const rows = XLSX.utils.sheet_to_json<(string | number | Date)[]>(sheet, {
     header: 1,
     defval: "",
     raw: false,
   });
+
   if (!rows.length) throw new Error("The workbook is empty.");
+
   const header = rows[0].map((h) => String(h).trim());
   const missing = RAW_HEADERS.filter((h) => !header.includes(h));
   if (missing.length) {
     throw new Error(`Missing columns: ${missing.join(", ")}`);
   }
+
   const idx = Object.fromEntries(header.map((h, i) => [h, i]));
   const records: AttendanceRaw[] = [];
+
   rows.slice(1).forEach((row, i) => {
     const personId = cell(row[idx["Person ID"]]);
     const name = cell(row[idx["Name"]]);
     if (!personId && !name) return;
+
     records.push({
       id: `${batchId}-${i + 1}`,
       batchId,
@@ -58,10 +70,14 @@ export function parseRawWorkbook(buffer: ArrayBuffer, batchId: string) {
       records: cell(row[idx["Records"]]),
     });
   });
+
   return records;
 }
 
-export function downloadImportTemplate() {
+/**
+ * Triggers a browser download of the standard Excel attendance import template.
+ */
+export function downloadImportTemplate(): void {
   const header = [...RAW_HEADERS];
   const sample = [
     1,
@@ -85,13 +101,17 @@ export function downloadImportTemplate() {
     "Attended",
     "07:58,17:04",
   ];
+
   const ws = XLSX.utils.aoa_to_sheet([header, sample]);
   const wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, ws, "Attendance");
   XLSX.writeFile(wb, "RICA_attendance_import_template.xlsx");
 }
 
-export function exportWorkbook(filename: string, rows: Record<string, unknown>[]) {
+/**
+ * Generates and downloads an Excel file from JSON array data.
+ */
+export function exportWorkbook(filename: string, rows: Record<string, unknown>[]): void {
   const ws = XLSX.utils.json_to_sheet(rows);
   const wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, ws, "Report");

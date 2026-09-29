@@ -1,10 +1,17 @@
-import type { PerformanceBand, Role } from "../types";
+// src/lib/utils.ts
+import type { PerformanceBand, Role } from "../types/types";
 
-export function cn(...parts: Array<string | false | null | undefined>) {
+/**
+ * Merges conditional class names into a single clean string.
+ */
+export function cn(...parts: Array<string | false | null | undefined>): string {
   return parts.filter(Boolean).join(" ");
 }
 
-export function formatMinutes(mins: number) {
+/**
+ * Formats minute values into readable hours and minutes (e.g. 480 -> "8h 00m").
+ */
+export function formatMinutes(mins: number): string {
   if (!Number.isFinite(mins)) return "—";
   const sign = mins < 0 ? "-" : "";
   const abs = Math.abs(mins);
@@ -13,6 +20,9 @@ export function formatMinutes(mins: number) {
   return `${sign}${h}h ${String(m).padStart(2, "0")}m`;
 }
 
+/**
+ * Returns performance band designation based on attendance percentage.
+ */
 export function performanceBand(pct: number): PerformanceBand {
   if (pct >= 95) return "Excellent";
   if (pct >= 85) return "Good";
@@ -20,7 +30,10 @@ export function performanceBand(pct: number): PerformanceBand {
   return "Warning";
 }
 
-export function bandColor(band: PerformanceBand) {
+/**
+ * Returns Tailwind color styling classes corresponding to performance bands.
+ */
+export function bandColor(band: PerformanceBand): string {
   switch (band) {
     case "Excellent":
       return "bg-emerald-50 text-emerald-800 ring-emerald-200";
@@ -33,14 +46,15 @@ export function bandColor(band: PerformanceBand) {
   }
 }
 
-export function roleLabel(role: Role) {
+/**
+ * Returns human-readable label for user roles.
+ */
+export function roleLabel(role: Role): string {
   switch (role) {
     case "admin":
       return "Admin";
     case "hod":
       return "Head of Department";
-    case "hou":
-      return "Head of Office/Unit";
     case "director":
       return "Director";
   }

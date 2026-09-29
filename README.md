@@ -1,27 +1,36 @@
-# RICA Attendance Tracking
+# RICA Attendance Tracking – Frontend
 
-Frontend-only attendance management demo built with React, TypeScript, and Vite. Accounts, attendance records, imports, reports, leave, configuration, and audit activity are stored in this browser's local storage. No backend service or remote API is used.
+React + TypeScript + Vite + Tailwind. All server communication uses **Redux Toolkit Query** against the RICA Attendance Backend (Flask).
 
-## Run locally
-
+## Run
 ```bash
+cp .env.example .env     # change VITE_DEV_API_TARGET if Flask is not on http://localhost:5000
 npm install
 npm run dev
 ```
+Start the Flask API first. Log in with an account created by the backend Admin (email or username).
 
-## Demo accounts
+## Structure
+```
+src/app/store.ts                Redux store (api + auth), session persistence
+src/features/auth/authSlice.ts  user, access/refresh tokens, must-change-password flag
+src/services/api.ts             RTK Query endpoints, Bearer header, refresh on 401
+src/services/mappers.ts         backend rows -> UI types
+src/data/store.tsx              useApp() facade over the RTK Query hooks
+src/components/Brand.tsx        RICA logo + Republic of Rwanda emblem
+src/pages/                      one file per screen
+```
 
-- Admin: `admin@rica.rw` / `Admin@123`
-- Head of Department: `hod@rica.rw` / `HOD@123`
-- Head of Office/Unit: `hou@rica.rw` / `HOU@123`
-- Director: `director@rica.rw` / `Director@123`
+## Data flow
+- Login stores tokens in the `auth` slice (mirrored to localStorage). Every request gets `Authorization: Bearer`.
+- Lists are cached queries with tags; mutations invalidate tags so screens refresh after uploads, corrections, leave, user changes.
+- A 401 triggers one `POST /api/auth/refresh`; if it fails the user is signed out and the cache is cleared.
 
-These accounts and their passwords are for this browser demo. Admins can create local accounts and reset their passwords in **Users & configuration**.
+## Roles (as in the backend)
+ADMIN (full), DIRECTOR (read-only, all departments), HOD (own department).
 
-## Included workflows
+## Not offered by the backend, so not in the UI
+Employee create/edit/delete, holiday edit, shift delete, office/unit level, Head of Office/Unit role.
 
-- Role-scoped dashboard, attendance, reports, and performance KPIs.
-- Attendance file preview and import from Excel or CSV into local browser storage.
-- Attendance verification, leave entries, employees, departments, shifts, and holidays.
-- Local user management, password changes, and audit history.
-- Responsive navigation and page layouts for desktop and mobile screens.
+## To confirm in /apidocs
+Request body of `POST /api/auth/change-password` (frontend sends `current_password`, `new_password`) and the response key of `/api/auth/refresh` (`access_token`).

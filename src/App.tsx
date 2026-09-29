@@ -3,6 +3,7 @@ import { lazy, Suspense } from "react";
 import { Navigate, Route, Routes, useLocation } from "react-router-dom";
 import { AppShell } from "./components/AppShell";
 import { useApp } from "./data/store";
+import { useAppSelector } from "./app/store";
 const LoginPage = lazy(() => import("./pages/LoginPage").then((m) => ({ default: m.LoginPage })));
 const DashboardPage = lazy(() => import("./pages/DashboardPage").then((m) => ({ default: m.DashboardPage })));
 const UploadPage = lazy(() => import("./pages/UploadPage").then((m) => ({ default: m.UploadPage })));
@@ -23,9 +24,10 @@ const PasswordPage = lazy(() => import("./pages/PasswordPage").then((m) => ({ de
 
 function Guard({ children }: { children: ReactNode }) {
   const { currentUser } = useApp();
+  const mustChangePassword = useAppSelector((s) => s.auth.mustChangePassword);
   const location = useLocation();
   if (!currentUser) return <Navigate to="/login" replace />;
-  if (sessionStorage.getItem("rica-api-force-password-change") === "1" && location.pathname !== "/account/password") return <Navigate to="/account/password" replace />;
+  if (mustChangePassword && location.pathname !== "/account/password") return <Navigate to="/account/password" replace />;
   return children;
 }
 
