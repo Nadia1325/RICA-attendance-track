@@ -32,7 +32,7 @@ export function AttendancePage() {
   // Mapped departments lookup
   const departments = useMemo(
     () => rawDepartments.map(mapDepartment),
-    [rawDepartments]
+    [rawDepartments],
   );
 
   // Mapped employees map

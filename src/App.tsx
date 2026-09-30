@@ -1,48 +1,33 @@
-import type { ReactNode } from "react";
-import { lazy, Suspense } from "react";
-import { Navigate, Route, Routes, useLocation } from "react-router-dom";
-import { AppShell } from "./components/AppShell";
-import { useApp } from "./data/store";
-import { useAppSelector } from "./app/store";
-const LoginPage = lazy(() => import("./pages/LoginPage").then((m) => ({ default: m.LoginPage })));
-const DashboardPage = lazy(() => import("./pages/DashboardPage").then((m) => ({ default: m.DashboardPage })));
-const UploadPage = lazy(() => import("./pages/UploadPage").then((m) => ({ default: m.UploadPage })));
-const RawAttendancePage = lazy(() => import("./pages/RawAttendancePage").then((m) => ({ default: m.RawAttendancePage })));
-const VerificationPage = lazy(() => import("./pages/VerificationPage").then((m) => ({ default: m.VerificationPage })));
-const AttendancePage = lazy(() => import("./pages/AttendancePage").then((m) => ({ default: m.AttendancePage })));
-const LeavesPage = lazy(() => import("./pages/LeavesPage").then((m) => ({ default: m.LeavesPage })));
-const DailyReportPage = lazy(() => import("./pages/DailyReportPage").then((m) => ({ default: m.DailyReportPage })));
-const MonthlyReportPage = lazy(() => import("./pages/MonthlyReportPage").then((m) => ({ default: m.MonthlyReportPage })));
-const PerformancePage = lazy(() => import("./pages/PerformancePage").then((m) => ({ default: m.PerformancePage })));
-const EmployeesPage = lazy(() => import("./pages/EmployeesPage").then((m) => ({ default: m.EmployeesPage })));
-const OrganizationPage = lazy(() => import("./pages/OrganizationPage").then((m) => ({ default: m.OrganizationPage })));
-const ShiftsPage = lazy(() => import("./pages/ShiftsPage").then((m) => ({ default: m.ShiftsPage })));
-const HolidaysPage = lazy(() => import("./pages/HolidaysPage").then((m) => ({ default: m.HolidaysPage })));
-const UsersPage = lazy(() => import("./pages/UsersPage").then((m) => ({ default: m.UsersPage })));
-const AuditPage = lazy(() => import("./pages/AuditPage").then((m) => ({ default: m.AuditPage })));
-const PasswordPage = lazy(() => import("./pages/PasswordPage").then((m) => ({ default: m.PasswordPage })));
+// src/App.tsx
+import { Routes, Route, Navigate } from "react-router-dom";
+import { AppShell } from "./components/layout/AppShell";
+import { LoginPage } from "./pages/LoginPage";
 
-function Guard({ children }: { children: ReactNode }) {
-  const { currentUser } = useApp();
-  const mustChangePassword = useAppSelector((s) => s.auth.mustChangePassword);
-  const location = useLocation();
-  if (!currentUser) return <Navigate to="/login" replace />;
-  if (mustChangePassword && location.pathname !== "/account/password") return <Navigate to="/account/password" replace />;
-  return children;
-}
+import AttendancePage from "./pages/AttendancePage";
+import AuditPage from "./pages/AuditPage";
+import DailyReportPage from "./pages/DailyReportPage";
+import DashboardPage from "./pages/DashboardPage";
+import EmployeesPage from "./pages/EmployeesPage";
+import HolidaysPage from "./pages/HolidaysPage";
+import LeavesPage from "./pages/LeavesPage";
+import MonthlyReportPage from "./pages/MonthlyReportPage";
+import OrganizationPage from "./pages/OrganizationPage";
+import PasswordPage from "./pages/PasswordPage";
+import PerformancePage from "./pages/PerformancePage";
+import RawAttendancePage from "./pages/RawAttendancePage";
+import ShiftsPage from "./pages/ShiftsPage";
+import UploadPage from "./pages/UploadPage";
+import UsersPage from "./pages/UsersPage";
+import VerificationPage from "./pages/VerificationPage"
 
-export default function App() {
+function App() {
   return (
-    <Suspense fallback={<div className="flex min-h-screen items-center justify-center text-sm font-medium text-slate-500">Loading RICA Attendance…</div>}>
     <Routes>
+      {/* Public */}
       <Route path="/login" element={<LoginPage />} />
-      <Route
-        element={
-          <Guard>
-            <AppShell />
-          </Guard>
-        }
-      >
+
+      {/* Protected under AppShell */}
+      <Route element={<AppShell />}>
         <Route path="/" element={<DashboardPage />} />
         <Route path="/upload" element={<UploadPage />} />
         <Route path="/raw" element={<RawAttendancePage />} />
@@ -60,8 +45,11 @@ export default function App() {
         <Route path="/audit" element={<AuditPage />} />
         <Route path="/account/password" element={<PasswordPage />} />
       </Route>
+
+      {/* Fallback */}
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
-    </Suspense>
   );
 }
+
+export default App;

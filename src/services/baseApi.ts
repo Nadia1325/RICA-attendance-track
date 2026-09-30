@@ -7,19 +7,38 @@ import {
   type FetchBaseQueryError,
 } from "@reduxjs/toolkit/query/react";
 import type { RootState } from "../app/store";
-import { loggedOut, setAccessToken } from "../features/auth/authSlice";
+import { KEYS, loggedOut, setAccessToken } from "../features/auth/authSlice";
 import type { ApiRow } from "./mappers";
 
-export const API_URL =
-  (import.meta.env.VITE_API_URL as string | undefined)?.replace(/\/$/, "") ?? "";
+/**
+ * Base URL from env without trailing slash or /api suffix.
+ * Handled so endpoints can start with /api/... safely.
+ */
+const rawEnvUrl = (import.meta.env.VITE_API_URL as string | undefined)?.replace(
+  /\/+$/,
+  "",
+);
+
+export const API_URL = rawEnvUrl
+  ? rawEnvUrl.replace(/\/api$/, "")
+  : "https://rica-attendance-backend.onrender.com/api";
 
 const rawBaseQuery = fetchBaseQuery({
+  // Clean base URL without trailing /api (endpoints will supply /api/...)
   baseUrl: API_URL,
   prepareHeaders: (headers, { getState, endpoint }) => {
-    const token = (getState() as RootState).auth.accessToken;
+    // 1. Get token from Redux state or fallback directly to localStorage
+    const stateToken = (getState() as RootState).auth?.accessToken;
+    const localToken = localStorage.getItem(KEYS.access);
+
+    const token = stateToken || localToken;
+
     if (token && endpoint !== "login") {
-      headers.set("Authorization", `Bearer ${token}`);
+      // 2. Prevent duplicate Bearer prefixes
+      const cleanToken = token.replace(/^Bearer\s+/i, "");
+      headers.set("Authorization", `Bearer ${cleanToken}`);
     }
+
     return headers;
   },
 });
@@ -36,8 +55,8 @@ const baseQueryWithReauth: BaseQueryFn<
 
   if (
     result.error?.status === 401 &&
-    !url.startsWith("/api/auth/login") &&
-    !url.startsWith("/api/auth/refresh")
+    !url.includes("/auth/login") &&
+    !url.includes("/auth/refresh")
   ) {
     const refreshToken = (api.getState() as RootState).auth.refreshToken;
     if (refreshToken) {
@@ -69,7 +88,7 @@ const baseQueryWithReauth: BaseQueryFn<
 
 export function errorMessage(
   error: unknown,
-  fallback = "Something went wrong. Please try again."
+  fallback = "Something went wrong. Please try again.",
 ): string {
   if (!error || typeof error !== "object") return fallback;
   const e = error as {

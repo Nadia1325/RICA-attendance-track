@@ -1,7 +1,7 @@
 // src/pages/PerformancePage/PeriodRecordsTable.tsx
 import { Card } from "../../components/ui";
 
-export type RemotePeriodRow = {
+export interface RemotePeriodRow {
   id?: string;
   person_id?: string;
   name?: string;
@@ -11,7 +11,8 @@ export type RemotePeriodRow = {
   check_out?: string;
   status?: string;
   late_min?: number;
-};
+  [key: string]: unknown;
+}
 
 interface PeriodRecordsTableProps {
   period: "month" | "quarter" | "year";
@@ -19,7 +20,11 @@ interface PeriodRecordsTableProps {
   isLoading?: boolean;
 }
 
-export function PeriodRecordsTable({ period, rows, isLoading }: PeriodRecordsTableProps) {
+export function PeriodRecordsTable({
+  period,
+  rows,
+  isLoading,
+}: PeriodRecordsTableProps) {
   return (
     <Card className="mt-5 min-w-0 overflow-hidden">
       <div className="border-b border-slate-100 px-4 py-3">
@@ -53,13 +58,19 @@ export function PeriodRecordsTable({ period, rows, isLoading }: PeriodRecordsTab
           <tbody className="divide-y divide-slate-100">
             {isLoading ? (
               <tr>
-                <td colSpan={8} className="px-4 py-10 text-center text-slate-500">
+                <td
+                  colSpan={8}
+                  className="px-4 py-10 text-center text-slate-500"
+                >
                   Loading detailed attendance records...
                 </td>
               </tr>
             ) : rows.length === 0 ? (
               <tr>
-                <td colSpan={8} className="px-4 py-10 text-center text-slate-500">
+                <td
+                  colSpan={8}
+                  className="px-4 py-10 text-center text-slate-500"
+                >
                   No attendance records found in this period.
                 </td>
               </tr>
@@ -67,7 +78,7 @@ export function PeriodRecordsTable({ period, rows, isLoading }: PeriodRecordsTab
               rows.map((row, index) => (
                 <tr
                   key={row.id ?? `${row.person_id}-${row.date}-${index}`}
-                  className="hover:bg-slate-50/80 transition-colors"
+                  className="transition-colors hover:bg-slate-50/80"
                 >
                   <td className="whitespace-nowrap px-3 py-2 text-slate-600">
                     {row.date}
@@ -79,10 +90,16 @@ export function PeriodRecordsTable({ period, rows, isLoading }: PeriodRecordsTab
                     {row.person_id}
                   </td>
                   <td className="px-3 py-2 text-slate-600">{row.department}</td>
-                  <td className="px-3 py-2 text-slate-600">{row.check_in || "—"}</td>
-                  <td className="px-3 py-2 text-slate-600">{row.check_out || "—"}</td>
+                  <td className="px-3 py-2 text-slate-600">
+                    {row.check_in || "—"}
+                  </td>
+                  <td className="px-3 py-2 text-slate-600">
+                    {row.check_out || "—"}
+                  </td>
                   <td className="px-3 py-2 text-slate-600">{row.status}</td>
-                  <td className="px-3 py-2 text-slate-600">{row.late_min ?? 0}</td>
+                  <td className="px-3 py-2 text-slate-600">
+                    {row.late_min ?? 0}
+                  </td>
                 </tr>
               ))
             )}

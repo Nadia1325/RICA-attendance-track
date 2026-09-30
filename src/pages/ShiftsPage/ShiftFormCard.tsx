@@ -1,5 +1,5 @@
 // src/pages/ShiftsPage/ShiftFormCard.tsx
-import { FormEvent } from "react";
+import { type FormEvent } from "react";
 import { Button, Card, Input } from "../../components/ui";
 import type { Shift } from "../../types/types";
 

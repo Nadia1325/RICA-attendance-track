@@ -1,6 +1,6 @@
-// src/pages/RawAttendancePage/RawAttendanceTable.tsx
 import { Badge, Card } from "../../components/ui";
 
+// Ensure 'export' keyword is present here
 export interface RawAttendanceRow {
   id: string;
   no: number | string;
@@ -55,7 +55,10 @@ const TABLE_HEADINGS = [
   "Batch",
 ];
 
-export function RawAttendanceTable({ rows, isLoading }: RawAttendanceTableProps) {
+export function RawAttendanceTable({
+  rows,
+  isLoading,
+}: RawAttendanceTableProps) {
   return (
     <Card className="overflow-auto">
       <table className="w-full min-w-[1450px] text-left text-xs">
@@ -71,13 +74,19 @@ export function RawAttendanceTable({ rows, isLoading }: RawAttendanceTableProps)
         <tbody className="divide-y divide-slate-100">
           {isLoading ? (
             <tr>
-              <td colSpan={21} className="px-4 py-12 text-center text-slate-500">
+              <td
+                colSpan={21}
+                className="px-4 py-12 text-center text-slate-500"
+              >
                 Loading raw device logs from backend...
               </td>
             </tr>
           ) : rows.length === 0 ? (
             <tr>
-              <td colSpan={21} className="px-4 py-12 text-center text-slate-500">
+              <td
+                colSpan={21}
+                className="px-4 py-12 text-center text-slate-500"
+              >
                 No raw attendance records match the selected filters.
               </td>
             </tr>
@@ -85,16 +94,24 @@ export function RawAttendanceTable({ rows, isLoading }: RawAttendanceTableProps)
             rows.slice(0, 500).map((r) => (
               <tr key={r.id} className="hover:bg-slate-50/80 transition-colors">
                 <td className="px-3 py-2">{r.no}</td>
-                <td className="px-3 py-2 font-mono text-slate-700">{r.personId}</td>
-                <td className="px-3 py-2 font-medium text-slate-900">{r.name}</td>
+                <td className="px-3 py-2 font-mono text-slate-700">
+                  {r.personId}
+                </td>
+                <td className="px-3 py-2 font-medium text-slate-900">
+                  {r.name}
+                </td>
                 <td className="px-3 py-2 text-slate-600">{r.department}</td>
                 <td className="px-3 py-2 text-slate-600">{r.position}</td>
                 <td className="px-3 py-2 text-slate-600">{r.gender}</td>
-                <td className="whitespace-nowrap px-3 py-2 text-slate-600">{r.date}</td>
+                <td className="whitespace-nowrap px-3 py-2 text-slate-600">
+                  {r.date}
+                </td>
                 <td className="px-3 py-2 text-slate-600">{r.week}</td>
                 <td className="px-3 py-2 text-slate-600">{r.timetable}</td>
                 <td className="px-3 py-2 text-slate-600">{r.checkIn || "—"}</td>
-                <td className="px-3 py-2 text-slate-600">{r.checkOut || "—"}</td>
+                <td className="px-3 py-2 text-slate-600">
+                  {r.checkOut || "—"}
+                </td>
                 <td className="px-3 py-2 text-slate-600">{r.work}</td>
                 <td className="px-3 py-2 text-slate-600">{r.ot}</td>
                 <td className="px-3 py-2 text-slate-600">{r.attended}</td>
@@ -108,14 +125,16 @@ export function RawAttendanceTable({ rows, isLoading }: RawAttendanceTableProps)
                       r.status === "Absent"
                         ? "rose"
                         : r.status === "LV" || r.status === "Leave"
-                        ? "sky"
-                        : "teal"
+                          ? "sky"
+                          : "teal"
                     }
                   >
                     {r.status}
                   </Badge>
                 </td>
-                <td className="px-3 py-2 font-mono text-slate-600">{r.records}</td>
+                <td className="px-3 py-2 font-mono text-slate-600">
+                  {r.records}
+                </td>
                 <td className="px-3 py-2 text-slate-600">{r.batchId}</td>
               </tr>
             ))

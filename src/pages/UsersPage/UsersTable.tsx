@@ -1,5 +1,5 @@
 // src/pages/UsersPage/UsersTable.tsx
-import { FormEvent } from "react";
+import { type FormEvent } from "react";
 import { Card } from "../../components/ui";
 import type { Department, User } from "../../types/types";
 import { UserRow } from "./UserRow";

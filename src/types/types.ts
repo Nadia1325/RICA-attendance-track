@@ -175,3 +175,10 @@ export interface AuditLog {
   details: string;
   delta?: string;
 }
+
+export interface RawAttendanceQueryParams {
+  date?: string;
+  month?: string;
+  year?: string;
+  [key: string]: unknown;
+}

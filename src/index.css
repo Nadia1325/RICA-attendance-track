@@ -1,152 +1,33 @@
 @import "tailwindcss";
 
-  @theme {
-    --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
-  
-    --color-rica-50:  #f5fbf2;
-    --color-rica-100: #e8f5df;
-    --color-rica-200: #d0ebbf;
-    --color-rica-300: #b8e19f;
-    --color-rica-400: #91cd71;
-    --color-rica-500: #62b445;
-    --color-rica-600: #559d3b;
-    --color-rica-700: #478231;
-    --color-rica-800: #396927;
-    --color-rica-900: #2c501d;
-    --color-rica-950: #172b0f;
-  }
-
-* {
-  box-sizing: border-box;
-}
-
-html {
-  font-size: 13px;
-}
-
-html,
-body,
-#root {
-  width: 100%;
-  min-width: 320px;
-  min-height: 100%;
-  overflow-x: clip;
+@theme {
+  --color-rica-50: #f4fbf2;
+  --color-rica-100: #e5f6e2;
+  --color-rica-200: #caecc4;
+  --color-rica-300: #a0dc97;
+  --color-rica-400: #71c563;
+  --color-rica-500: #62b445; /* Primary Brand Accent */
+  --color-rica-600: #499232;
+  --color-rica-700: #3b742a;
+  --color-rica-800: #325d26;
+  --color-rica-900: #2b4d22;
+  --color-rica-950: #132a0e;
 }
 
 body {
-  margin: 0;
-  font-family: var(--font-sans);
-  background: #f4f7f6;
-  color: #0f172a;
+  font-family:
+    system-ui,
+    -apple-system,
+    sans-serif;
 }
 
-::-webkit-scrollbar {
-  width: 10px;
-  height: 10px;
-}
-
-::-webkit-scrollbar-thumb {
-  background: #cbd5e1;
-  border-radius: 999px;
-}
-
-main,
-main > * {
-  min-width: 0;
-  max-width: 100%;
-}
-
-main table {
-  max-width: 100%;
-}
-
-.sidebar-nav {
-  overflow: hidden;
-}
-
-.sidebar-link {
-  min-height: 25px;
-  line-height: 1rem;
-  font-size: 12px;
-}
-
-@media (max-height: 680px) {
-  .sidebar-link {
-    min-height: 23px;
-    padding-block: 0.2rem;
-  }
-
-  .sidebar-nav {
-    padding-block: 0.25rem;
-  }
-}
-
-@media (max-height: 560px) {
-  .sidebar-link {
-    min-height: 20px;
-    padding-block: 0.1rem;
-    font-size: 0.68rem;
-    line-height: 0.9rem;
-  }
-
-  .sidebar-nav {
-    gap: 0;
-    padding-block: 0.1rem;
-  }
-
-  .sidebar-brand {
-    padding-block: 0.4rem;
-  }
-
-  .sidebar-brand .h-10 {
-    height: 1.75rem;
-    width: 1.75rem;
-  }
-
-  .sidebar-brand p:last-child {
-    display: none;
-  }
-
-  .sidebar-footer {
-    padding-block: 0.4rem;
-  }
-
-  .sidebar-footer .h-8 {
-    height: 1.5rem;
-    width: 1.5rem;
-  }
-}
-
-@media (max-height: 450px) {
-  .sidebar-link {
-    min-height: 17px;
-    padding-block: 0;
-    font-size: 0.62rem;
-    line-height: 0.8rem;
-  }
-
-  .sidebar-nav {
-    gap: 0;
-    padding-block: 0;
-  }
-
-  .sidebar-footer {
-    padding-block: 0.2rem;
-  }
-}
-
-/* Keep scroll behavior for long pages and tables while removing scrollbar chrome. */
-* {
-  scrollbar-width: none;
-}
-
-*::-webkit-scrollbar {
-  display: none;
-}
-
-button,
 input,
-select,
-textarea {
-  max-width: 100%;
+textarea,
+select {
+  color: #0f172a; /* dark slate text color */
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: #94a3b8; /* readable placeholder gray */
 }

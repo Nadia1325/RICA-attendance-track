@@ -1,5 +1,5 @@
 // src/pages/OrganizationPage/DepartmentFormCard.tsx
-import { FormEvent } from "react";
+import { type FormEvent } from "react";
 import { Button, Card, Input } from "../../components/ui";
 
 interface DepartmentFormCardProps {

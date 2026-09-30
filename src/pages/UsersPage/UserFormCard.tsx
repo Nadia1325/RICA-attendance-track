@@ -1,5 +1,5 @@
 // src/pages/UsersPage/UserFormCard.tsx
-import { FormEvent } from "react";
+import { type FormEvent } from "react";
 import { Button, Card, Input, Select } from "../../components/ui";
 import type { Department } from "../../types/types";
 

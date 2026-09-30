@@ -1,16 +1,21 @@
 // src/components/attendance/KpiDashboard.tsx
 import React from "react";
-import { useGetAttendanceQuery } from "../../features/attendance/attendanceApi";
-import { useGetHolidaysQuery } from "../../features/leave/leaveApi";
+import { useGetRawAttendanceQuery } from "../../services/attendanceApi";
+import { useGetHolidaysQuery } from "../../services/referenceApi";
 import { workingDaysInRange, computeKpis } from "../../lib/kpis";
+import { mapRaw } from "../../services/mappers";
 
 export const KpiDashboard: React.FC = () => {
-  const { data: attendanceData } = useGetAttendanceQuery();
+  const { data: rawRecords = [] } = useGetRawAttendanceQuery();
   const { data: holidays = [] } = useGetHolidaysQuery();
 
-  const records = attendanceData?.finals || [];
-  const workingDays = workingDaysInRange("2026-09-01", "2026-09-30", holidays);
-  const kpis = computeKpis(records, workingDays.length);
+  const records = rawRecords.map(mapRaw);
+  const workingDays = workingDaysInRange(
+    "2026-09-01",
+    "2026-09-30",
+    holidays as any,
+  );
+  const kpis = computeKpis(records as any, workingDays.length);
 
   return (
     <div className="grid grid-cols-3 gap-4">

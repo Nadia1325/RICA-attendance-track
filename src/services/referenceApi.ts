@@ -4,15 +4,16 @@ import { asArray, minutesBetween, type ApiRow } from "./mappers";
 
 export const referenceApi = baseApi.injectEndpoints({
   endpoints: (build) => ({
+    // ── Departments ──
     getDepartments: build.query<ApiRow[], void>({
-      query: () => "/api/departments",
+      query: () => "/departments",
       transformResponse: (r: unknown) =>
         asArray(Array.isArray(r) ? r : (r as ApiRow)?.departments),
       providesTags: ["Department"],
     }),
     addDepartment: build.mutation<ApiRow, { name: string; office: string }>({
       query: (body) => ({
-        url: "/api/departments",
+        url: "/departments",
         method: "POST",
         body,
       }),
@@ -23,21 +24,23 @@ export const referenceApi = baseApi.injectEndpoints({
       { id: string; name?: string; office?: string }
     >({
       query: ({ id, ...body }) => ({
-        url: `/api/departments/${encodeURIComponent(id)}`,
+        url: `/departments/${encodeURIComponent(id)}`,
         method: "PATCH",
         body,
       }),
       invalidatesTags: ["Department"],
     }),
 
+    // ── Employees ──
     getEmployees: build.query<ApiRow[], void>({
-      query: () => "/api/employees",
+      query: () => "/employees",
       transformResponse: asArray,
       providesTags: ["Employee"],
     }),
 
+    // ── Shifts ──
     getShifts: build.query<ApiRow[], void>({
-      query: () => "/api/shifts",
+      query: () => "/shifts",
       transformResponse: asArray,
       providesTags: ["Shift"],
     }),
@@ -46,7 +49,7 @@ export const referenceApi = baseApi.injectEndpoints({
       { name: string; startTime: string; endTime: string }
     >({
       query: (s) => ({
-        url: "/api/shifts",
+        url: "/shifts",
         method: "POST",
         body: {
           name: s.name,
@@ -72,7 +75,7 @@ export const referenceApi = baseApi.injectEndpoints({
         const start = startTime ?? currentStart;
         const end = endTime ?? currentEnd;
         return {
-          url: `/api/shifts/${encodeURIComponent(id)}`,
+          url: `/shifts/${encodeURIComponent(id)}`,
           method: "PATCH",
           body: {
             ...(name ? { name } : {}),
@@ -87,17 +90,18 @@ export const referenceApi = baseApi.injectEndpoints({
       invalidatesTags: ["Shift"],
     }),
 
+    // ── Holidays ──
     getHolidays: build.query<ApiRow[], void>({
-      query: () => "/api/holidays",
+      query: () => "/holidays",
       transformResponse: asArray,
       providesTags: ["Holiday"],
     }),
-    addHoliday: build.mutation<
+    createHoliday: build.mutation<
       ApiRow,
       { name: string; date: string; type: "Public" | "Organizational" }
     >({
       query: (h) => ({
-        url: "/api/holidays",
+        url: "/holidays",
         method: "POST",
         body: {
           name: h.name,
@@ -109,7 +113,7 @@ export const referenceApi = baseApi.injectEndpoints({
     }),
     deleteHoliday: build.mutation<unknown, string>({
       query: (id) => ({
-        url: `/api/holidays/${encodeURIComponent(id)}`,
+        url: `/holidays/${encodeURIComponent(id)}`,
         method: "DELETE",
       }),
       invalidatesTags: ["Holiday"],
@@ -126,6 +130,9 @@ export const {
   useAddShiftMutation,
   useUpdateShiftMutation,
   useGetHolidaysQuery,
-  useAddHolidayMutation,
+  useCreateHolidayMutation,   // ✅ exported
   useDeleteHolidayMutation,
 } = referenceApi;
+
+// ✅ Backward-compatible alias (in case some pages use useAddHolidayMutation)
+export const useAddHolidayMutation = useCreateHolidayMutation;

@@ -1,7 +1,33 @@
 // src/pages/MonthlyReportPage/utils.ts
 import type { AttendanceFinal, Employee } from "../../types/types";
 
-export type ApiAttendanceRow = Record<string, unknown>;
+/**
+ * Raw API row from /api/reports/monthly.
+ * Fields come as snake_case from the backend.
+ */
+export interface ApiAttendanceRow {
+  id?: string | number;
+  person_id?: string | number;
+  name?: string;
+  department?: string;
+  department_id?: string;
+  date?: string;
+  week?: string;
+  timetable?: string;
+  check_in?: string;
+  check_out?: string;
+  work_min?: number | string;
+  ot_min?: number | string;
+  attended_min?: number | string;
+  late_min?: number | string;
+  early_min?: number | string;
+  absent_min?: number | string;
+  leave_min?: number | string;
+  status?: string;
+  notes?: string;
+  verified_at?: string | null;
+  [key: string]: unknown; // allow extras safely
+}
 
 /**
  * Formats a local Date object into YYYY-MM-DD without timezone offset issues.
@@ -16,7 +42,9 @@ export function formatDateLocal(date: Date): string {
 /**
  * Converts dynamic raw API attendance statuses to AttendanceFinal status.
  */
-export function parseAttendanceStatus(rawStatus: string): AttendanceFinal["status"] {
+export function parseAttendanceStatus(
+  rawStatus: string,
+): AttendanceFinal["status"] {
   switch (rawStatus.toUpperCase()) {
     case "A":
       return "Absent";
@@ -37,10 +65,11 @@ export function parseAttendanceStatus(rawStatus: string): AttendanceFinal["statu
 export function transformApiRowToAttendance(
   r: ApiAttendanceRow,
   emp: Employee,
-  index: number
+  index: number,
 ): AttendanceFinal {
   return {
     id: String(r.id ?? `${emp.personId}-${index}`),
+    rawId: String(r.id ?? ""),
     personId: emp.personId,
     name: emp.name,
     departmentId: emp.departmentId,

@@ -1,5 +1,5 @@
 // src/pages/OrganizationPage/EditDepartmentModal.tsx
-import { FormEvent, useState } from "react";
+import { type FormEvent, useState } from "react";
 import { Button, Input } from "../../components/ui";
 
 interface EditDepartmentModalProps {

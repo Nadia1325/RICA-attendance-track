@@ -1,5 +1,5 @@
 // src/pages/UploadPage/FileDropzone.tsx
-import { ChangeEvent } from "react";
+import { type ChangeEvent } from "react";
 import { UploadCloud } from "lucide-react";
 import { Button } from "../../components/ui";
 

@@ -3,11 +3,21 @@ import { baseApi } from "./baseApi";
 import { asArray, type ApiRow } from "./mappers";
 
 const PAGE = 500;
+// Fixed: Removed leading /api to prevent /api/api/ duplication
+const RAW_URL = "/attendance/daily";
 
 export interface RawAttendanceFilterParams {
   date?: string;
   search?: string;
   department?: string;
+}
+export interface RawAttendanceParams {
+  date?: string;
+  month?: string;
+  year?: string;
+  mode?: string;
+  take?: number;
+  skip?: number;
 }
 
 export interface RawAttendanceItem {
@@ -34,13 +44,19 @@ export interface RawAttendanceItem {
 
 export const attendanceApi = baseApi.injectEndpoints({
   endpoints: (build) => ({
-    getRawAttendance: build.query<ApiRow[], void>({
-      async queryFn(_arg, _api, _extra, baseQuery) {
+    getRawAttendance: build.query<ApiRow[], RawAttendanceParams | void>({
+      async queryFn(arg, _api, _extra, baseQuery) {
+        const filters = new URLSearchParams();
+        if (arg?.date) filters.set("date", arg.date);
+        if (arg?.month) filters.set("month", arg.month);
+        if (arg?.year) filters.set("year", arg.year);
+
         const rows: ApiRow[] = [];
         for (let skip = 0; skip < 20000; skip += PAGE) {
-          const res = await baseQuery(
-            `/api/attendance/raw?take=${PAGE}&skip=${skip}`
-          );
+          const qs = new URLSearchParams(filters);
+          qs.set("take", String(PAGE));
+          qs.set("skip", String(skip));
+          const res = await baseQuery(`${RAW_URL}?${qs.toString()}`);
           if (res.error) return { error: res.error };
           const page = asArray(res.data);
           rows.push(...page);
@@ -53,25 +69,26 @@ export const attendanceApi = baseApi.injectEndpoints({
 
     getDailyAttendanceRaw: build.query<
       RawAttendanceItem[],
-      RawAttendanceFilterParams | void
+      RawAttendanceParams | void
     >({
       query: (params) => {
-        const queryParams = new URLSearchParams();
+        const qs = new URLSearchParams();
+        if (params?.date) qs.set("date", params.date);
+        if (params?.month) qs.set("month", params.month);
+        if (params?.year) qs.set("year", params.year);
+        if (params?.mode) qs.set("mode", params.mode);
+        if (params?.take) qs.set("take", String(params.take));
+        if (params?.skip) qs.set("skip", String(params.skip));
 
-        if (params?.date) queryParams.append("date", params.date);
-        if (params?.search) queryParams.append("search", params.search);
-        if (params?.department && params.department !== "All departments") {
-          queryParams.append("department", params.department);
-        }
+        const queryString = qs.toString();
+        return `/attendance/daily${queryString ? `?${queryString}` : ""}`;
+      },
 
-        const queryString = queryParams.toString();
-        return `/api/attendance/daily${queryString ? `?${queryString}` : ""}`;
+      transformResponse: (res: any) => {
+        if (Array.isArray(res)) return res;
+        return res.data || res.records || res.items || [];
       },
-      transformResponse: (res: unknown) => {
-        if (Array.isArray(res)) return res as RawAttendanceItem[];
-        const r = res as { data?: RawAttendanceItem[]; records?: RawAttendanceItem[] };
-        return r.data || r.records || [];
-      },
+
       providesTags: ["Raw"],
     }),
 
@@ -80,7 +97,7 @@ export const attendanceApi = baseApi.injectEndpoints({
         const rows: ApiRow[] = [];
         for (let skip = 0; skip < 20000; skip += PAGE) {
           const res = await baseQuery(
-            `/api/attendance/final?take=${PAGE}&skip=${skip}`
+            `/attendance/final?take=${PAGE}&skip=${skip}`,
           );
           if (res.error) return { error: res.error };
           const page = asArray(res.data);
@@ -93,13 +110,14 @@ export const attendanceApi = baseApi.injectEndpoints({
     }),
 
     getRawRecord: build.query<ApiRow, string>({
-      query: (id) => `/api/attendance/raw/${encodeURIComponent(id)}`,
+      // Fixed: Removed leading /api to match normalized base URL
+      query: (id) => `/attendance/raw/${encodeURIComponent(id)}`,
       providesTags: (_r, _e, id) => [{ type: "Raw", id }],
     }),
 
     verifyRecord: build.mutation<unknown, { id: string; body: ApiRow }>({
       query: ({ id, body }) => ({
-        url: `/api/attendance/raw/${encodeURIComponent(id)}`,
+        url: `/attendance/raw/${encodeURIComponent(id)}`,
         method: "PATCH",
         body,
       }),
@@ -107,14 +125,14 @@ export const attendanceApi = baseApi.injectEndpoints({
     }),
 
     getAnomalies: build.query<ApiRow[], void>({
-      query: () => "/api/attendance/anomalies?take=500",
+      query: () => "/attendance/anomalies?take=500",
       transformResponse: asArray,
       providesTags: ["Anomaly"],
     }),
 
     resolveAnomaly: build.mutation<unknown, { id: string; note?: string }>({
       query: ({ id, note }) => ({
-        url: `/api/attendance/anomalies/${encodeURIComponent(id)}/resolve`,
+        url: `/attendance/anomalies/${encodeURIComponent(id)}/resolve`,
         method: "POST",
         body: { note: note ?? "" },
       }),
@@ -122,14 +140,13 @@ export const attendanceApi = baseApi.injectEndpoints({
     }),
 
     getBatches: build.query<ApiRow[], void>({
-      query: () => "/api/attendance/batches",
+      query: () => "/attendance/batches",
       transformResponse: asArray,
       providesTags: ["Batch"],
     }),
 
     getBatchAnomalies: build.query<ApiRow[], string>({
-      query: (id) =>
-        `/api/attendance/batches/${encodeURIComponent(id)}/anomalies`,
+      query: (id) => `/attendance/batches/${encodeURIComponent(id)}/anomalies`,
       transformResponse: asArray,
       providesTags: (_r, _e, id) => [{ type: "Anomaly", id }],
     }),
@@ -139,7 +156,7 @@ export const attendanceApi = baseApi.injectEndpoints({
         const body = new FormData();
         body.append("file", file, file.name);
         return {
-          url: "/api/attendance/upload",
+          url: "/attendance/upload",
           method: "POST",
           body,
         };
@@ -158,6 +175,7 @@ export const {
   useVerifyRecordMutation,
   useGetAnomaliesQuery,
   useResolveAnomalyMutation,
+  useGetBatchAnomaliesQuery,
   useGetBatchesQuery,
   useLazyGetBatchAnomaliesQuery,
   useUploadAttendanceMutation,

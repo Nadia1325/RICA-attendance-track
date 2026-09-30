@@ -1,4 +1,4 @@
-import React, { InputHTMLAttributes } from "react";
+import React, { type InputHTMLAttributes } from "react";
 import { cn } from "../../lib/utils";
 
 export type InputProps = InputHTMLAttributes<HTMLInputElement>;

@@ -37,7 +37,8 @@ export function UrlImportForm({
         </Button>
       </div>
       <p className="mt-2 text-xs text-slate-500">
-        The source must allow browser CORS access. After preview, the file is uploaded to the RICA server for validation.
+        The source must allow browser CORS access. After preview, the file is
+        uploaded to the RICA server for validation.
       </p>
     </div>
   );

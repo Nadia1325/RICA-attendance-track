@@ -1,5 +1,5 @@
 // src/pages/PasswordPage/PasswordChangeForm.tsx
-import { FormEvent, useState } from "react";
+import { type FormEvent, useState } from "react";
 import { Button, Input } from "../../components/ui";
 import { StatusAlert } from "./StatusAlert";
 

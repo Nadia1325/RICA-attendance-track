@@ -1,4 +1,4 @@
-import React, { SelectHTMLAttributes } from "react";
+import React, { type SelectHTMLAttributes } from "react";
 import { cn } from "../../lib/utils";
 
 export type SelectProps = SelectHTMLAttributes<HTMLSelectElement>;

@@ -1,5 +1,5 @@
 // src/pages/UsersPage/UserRow.tsx
-import { FormEvent } from "react";
+import { type FormEvent } from "react";
 import { KeyRound, Trash2 } from "lucide-react";
 import { Badge, Button, Input } from "../../components/ui";
 import { roleLabel } from "../../lib/utils";
