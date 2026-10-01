@@ -30,6 +30,13 @@ export const referenceApi = baseApi.injectEndpoints({
       }),
       invalidatesTags: ["Department"],
     }),
+    deleteDepartment: build.mutation<unknown, string>({
+      query: (id) => ({
+        url: `/departments/${encodeURIComponent(id)}`,
+        method: "DELETE",
+      }),
+      invalidatesTags: ["Department", "Employee", "User"],
+    }),
 
     // ── Employees ──
     getEmployees: build.query<ApiRow[], void>({
@@ -125,6 +132,7 @@ export const {
   useGetDepartmentsQuery,
   useAddDepartmentMutation,
   useUpdateDepartmentMutation,
+  useDeleteDepartmentMutation,
   useGetEmployeesQuery,
   useGetShiftsQuery,
   useAddShiftMutation,

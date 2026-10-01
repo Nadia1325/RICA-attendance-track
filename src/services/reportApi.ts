@@ -29,8 +29,8 @@ export const reportApi = baseApi.injectEndpoints({
         period === "month"
           ? `/reports/monthly?year=${year}&month=${month}`
           : period === "quarter"
-          ? `/api/reports/quarterly?year=${year}&quarter=${quarter}`
-          : `/api/reports/yearly?year=${year}`,
+          ? `/reports/quarterly?year=${year}&quarter=${quarter}`
+          : `/reports/yearly?year=${year}`,
       providesTags: ["Report"],
     }),
     getKpis: build.query<

@@ -7,6 +7,7 @@ import {
   mapAudit,
   mapUser,
   useGetAuditLogsQuery,
+  useGetUsersQuery,
   useMeQuery,
 } from "../../services";
 
@@ -35,9 +36,43 @@ export function AuditPage() {
   } = useGetAuditLogsQuery(undefined, {
     skip: !isAuthorized,
   });
+  const { data: rawUsers = [] } = useGetUsersQuery(undefined, {
+    skip: !isAuthorized,
+  });
+  const usersById = useMemo(
+    () =>
+      new Map(
+        rawUsers
+          .map((user) => mapUser(user))
+          .filter((user): user is NonNullable<ReturnType<typeof mapUser>> => Boolean(user))
+          .map((user) => [user.id, user]),
+      ),
+    [rawUsers],
+  );
 
   // Map raw log data to domain objects
-  const logs = useMemo(() => rawLogs.map(mapAudit), [rawLogs]);
+  const logs = useMemo(
+    () =>
+      rawLogs.map((raw) => {
+        const log = mapAudit(raw);
+        const user = usersById.get(log.userId);
+        const entityUser =
+          log.entity.toLowerCase() === "user"
+            ? usersById.get(log.details)
+            : undefined;
+        return user
+          ? {
+              ...log,
+              userName: user.name,
+              userEmail: user.email,
+              details: entityUser
+                ? `${entityUser.name} (${entityUser.email})`
+                : log.details,
+            }
+          : log;
+      }),
+    [rawLogs, usersById],
+  );
 
   // Filter logs by search query and action
   const filteredLogs = useMemo(() => {

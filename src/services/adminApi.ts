@@ -4,6 +4,7 @@ import { asArray, type ApiRow } from "./mappers";
 
 export interface CreateUserArgs {
   name: string;
+  username: string;
   email: string;
   password: string;
   role: string;
@@ -39,9 +40,10 @@ export const adminApi = baseApi.injectEndpoints({
         method: "POST",
         body: {
           full_name: u.name,
+          username: u.username,
           email: u.email,
-          password: u.password,
-          role: u.role,
+          temp_password: u.password,
+          role: u.role.toUpperCase(),
           ...(u.departmentId ? { department_id: u.departmentId } : {}),
         },
       }),
@@ -55,7 +57,7 @@ export const adminApi = baseApi.injectEndpoints({
         body: {
           ...(name !== undefined ? { full_name: name } : {}),
           ...(email !== undefined ? { email } : {}),
-          ...(role !== undefined ? { role } : {}),
+          ...(role !== undefined ? { role: role.toUpperCase() } : {}),
           ...(departmentId !== undefined
             ? { department_id: departmentId }
             : {}),

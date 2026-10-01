@@ -1,5 +1,6 @@
 // src/pages/AuditPage/AuditTable.tsx
-import { Badge, Card } from "../../components/ui";
+import { useMemo, useState } from "react";
+import { Badge, Card, Pagination } from "../../components/ui";
 import type { AuditLog } from "../../types";
 
 interface AuditTableProps {
@@ -17,6 +18,13 @@ export function AuditTable({
   errorMessage,
   onRetry,
 }: AuditTableProps) {
+  const [page, setPage] = useState(1);
+  const pageSize = 15;
+  const pageCount = Math.max(1, Math.ceil(logs.length / pageSize));
+  const visibleLogs = useMemo(
+    () => logs.slice((page - 1) * pageSize, page * pageSize),
+    [logs, page],
+  );
   if (isLoading) {
     return (
       <Card className="p-8 text-center text-sm text-slate-500">
@@ -45,7 +53,7 @@ export function AuditTable({
         <table className="w-full text-left text-sm min-w-[800px]">
           <thead className="bg-slate-50 text-xs uppercase text-slate-500 border-b border-slate-200">
             <tr>
-              {["Time", "User", "Action", "Entity", "Details", "Delta"].map(
+                {["Time", "User", "Action", "Entity", "Details"].map(
                 (h) => (
                   <th key={h} className="px-4 py-3 font-semibold">
                     {h}
@@ -55,7 +63,7 @@ export function AuditTable({
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100">
-            {logs.map((l) => {
+            {visibleLogs.map((l) => {
               const formattedDate = isNaN(Date.parse(l.timestamp))
                 ? l.timestamp
                 : new Date(l.timestamp).toLocaleString();
@@ -79,8 +87,11 @@ export function AuditTable({
                   <td className="px-4 py-3 whitespace-nowrap text-xs text-slate-500">
                     {formattedDate}
                   </td>
-                  <td className="px-4 py-3 font-medium text-slate-900">
-                    {l.userName}
+                  <td className="px-4 py-3">
+                    <p className="font-medium text-slate-900">{l.userName}</p>
+                    <p className="text-xs text-slate-500">
+                      {l.userEmail || l.userId || "System"}
+                    </p>
                   </td>
                   <td className="px-4 py-3">
                     <Badge tone={badgeTone}>{l.action}</Badge>
@@ -88,9 +99,8 @@ export function AuditTable({
                   <td className="px-4 py-3 font-mono text-xs text-slate-700">
                     {l.entity}
                   </td>
-                  <td className="px-4 py-3 text-slate-600">{l.details}</td>
-                  <td className="px-4 py-3 text-xs text-slate-500 font-mono max-w-[200px] truncate">
-                    {l.delta || "—"}
+                  <td className="max-w-[260px] px-4 py-3 text-slate-600">
+                    {l.details || (l.action === "LOGIN" ? "Signed in" : "—")}
                   </td>
                 </tr>
               );
@@ -99,7 +109,7 @@ export function AuditTable({
             {logs.length === 0 && (
               <tr>
                 <td
-                  colSpan={6}
+                    colSpan={5}
                   className="px-4 py-12 text-center text-slate-500"
                 >
                   No audit logs match your search filters.
@@ -109,6 +119,13 @@ export function AuditTable({
           </tbody>
         </table>
       </div>
+      <Pagination
+        page={Math.min(page, pageCount)}
+        pageCount={pageCount}
+        total={logs.length}
+        pageSize={pageSize}
+        onPageChange={setPage}
+      />
     </Card>
   );
 }

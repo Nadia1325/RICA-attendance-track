@@ -40,6 +40,11 @@ export function UserRow({
         <Badge tone="teal">{roleLabel(user.role)}</Badge>
       </td>
       <td className="px-4 py-3 text-slate-500">{departmentName}</td>
+      <td className="px-4 py-3 text-slate-500">
+        {user.lastLoginAt
+          ? new Date(user.lastLoginAt).toLocaleDateString()
+          : "Never"}
+      </td>
       <td className="px-4 py-3">
         <Badge tone={user.active ? "emerald" : "rose"}>
           {user.active ? "Active" : "Inactive"}

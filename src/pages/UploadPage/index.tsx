@@ -8,17 +8,22 @@ import {
   useLazyGetBatchAnomaliesQuery,
   useUploadAttendanceMutation,
   useGetBatchesQuery,
+  useDeleteBatchMutation,
   mapBatch,
 } from "../../services/api";
 // add to your existing react import
 
-import { Card, PageHeader } from "../../components/ui";
+import { Card, ConfirmDialog, PageHeader } from "../../components/ui";
 import { can } from "../../lib/permissions";
 import type { AttendanceRaw } from "../../types/types";
 
 import { FileDropzone } from "./FileDropzone";
 import { PreviewSection } from "./PreviewSection";
-import { type BatchAnomalies, RecentBatchesCard } from "./RecentBatchesCard";
+import {
+  type BatchAnomalies,
+  type BatchItem,
+  RecentBatchesCard,
+} from "./RecentBatchesCard";
 import { UrlImportForm } from "./UrlImportForm";
 
 export function UploadPage() {
@@ -31,6 +36,7 @@ export function UploadPage() {
   const [uploadAttendance, { isLoading: uploading }] =
     useUploadAttendanceMutation();
   const [loadBatchAnomalies] = useLazyGetBatchAnomaliesQuery();
+  const [deleteBatch] = useDeleteBatchMutation();
 
   const [status, setStatus] = useState("");
   const [error, setError] = useState("");
@@ -44,6 +50,8 @@ export function UploadPage() {
   const [batchAnomalies, setBatchAnomalies] = useState<BatchAnomalies | null>(
     null,
   );
+  const [deleteTarget, setDeleteTarget] = useState<BatchItem | null>(null);
+  const [deleting, setDeleting] = useState(false);
 
   const expected = useMemo(() => RAW_HEADERS.join(" · "), []);
 
@@ -54,6 +62,21 @@ export function UploadPage() {
       setBatchAnomalies({ batchId, rows });
     } catch (cause) {
       setError(errorMessage(cause, "Unable to load batch anomalies."));
+    }
+  }
+
+  async function handleDeleteBatch(batch: BatchItem) {
+    setError("");
+    setDeleting(true);
+    try {
+      await deleteBatch(batch.id).unwrap();
+      if (batchAnomalies?.batchId === batch.id) setBatchAnomalies(null);
+      setStatus(`${batch.fileName} was deleted.`);
+      setDeleteTarget(null);
+    } catch (cause) {
+      setError(errorMessage(cause, "Unable to delete this batch."));
+    } finally {
+      setDeleting(false);
     }
   }
 
@@ -224,8 +247,26 @@ export function UploadPage() {
           batchAnomalies={batchAnomalies}
           onViewAnomalies={(batchId) => void handleViewBatchAnomalies(batchId)}
           onCloseAnomalies={() => setBatchAnomalies(null)}
+          onDeleteBatch={(batch) => setDeleteTarget(batch)}
         />
       </div>
+      <ConfirmDialog
+        open={Boolean(deleteTarget)}
+        title="Delete imported batch?"
+        description={
+          deleteTarget
+            ? `This will permanently remove ${deleteTarget.fileName} and all attendance records from this import. This action cannot be undone.`
+            : ""
+        }
+        confirmLabel="Delete batch"
+        busy={deleting}
+        onCancel={() => {
+          if (!deleting) setDeleteTarget(null);
+        }}
+        onConfirm={() => {
+          if (deleteTarget) void handleDeleteBatch(deleteTarget);
+        }}
+      />
     </div>
   );
 }

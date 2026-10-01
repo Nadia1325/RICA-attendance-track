@@ -16,6 +16,7 @@ export function UserFormCard({ departments, onSubmit }: UserFormCardProps) {
         onSubmit={onSubmit}
       >
         <Input name="name" placeholder="Full name" required />
+        <Input name="username" placeholder="Username" required />
         <Input
           name="email"
           type="email"

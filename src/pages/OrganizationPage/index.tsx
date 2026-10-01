@@ -1,16 +1,18 @@
 import { type FormEvent, useMemo, useState } from "react";
-import { Button, PageHeader } from "../../components/ui";
+import { Button, ConfirmDialog, PageHeader } from "../../components/ui";
 import { useApp } from "../../data/store";
 import { can } from "../../lib/permissions";
 import {
   errorMessage,
   useAddDepartmentMutation,
   useUpdateDepartmentMutation,
+  useDeleteDepartmentMutation,
 } from "../../services/api";
 
 import { DepartmentCard } from "./DepartmentCard";
 import { DepartmentFormCard } from "./DepartmentFormCard";
 import { EditDepartmentModal } from "./EditDepartmentModal";
+import type { Role } from "../../types/types";
 
 interface EditingTarget {
   id: string;
@@ -22,14 +24,20 @@ export function OrganizationPage() {
   const { currentUser, employees, departments } = useApp();
   const [addDepartment] = useAddDepartmentMutation();
   const [updateDepartment] = useUpdateDepartmentMutation();
+  const [deleteDepartment] = useDeleteDepartmentMutation();
 
-  const admin = Boolean(currentUser && can(currentUser.role, "manageUsers"));
+  const admin = Boolean(
+    currentUser?.role && can(currentUser.role as Role, "manageUsers"),
+  );
 
   const [open, setOpen] = useState(false);
   const [error, setError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [editingDepartment, setEditingDepartment] =
     useState<EditingTarget | null>(null);
+  const [deletingDepartment, setDeletingDepartment] =
+    useState<EditingTarget | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const headcounts = useMemo(() => {
     const counts = new Map<string, number>();
@@ -52,7 +60,7 @@ export function OrganizationPage() {
     try {
       await addDepartment({
         name: String(fd.get("name")).trim(),
-        code: String(fd.get("code")).trim().toUpperCase(),
+        office: String(fd.get("code")).trim().toUpperCase(),
       }).unwrap();
       form.reset();
       setOpen(false);
@@ -70,9 +78,23 @@ export function OrganizationPage() {
   ) {
     setError("");
     try {
-      await updateDepartment({ id, name, code }).unwrap();
+      await updateDepartment({ id, name, office: code }).unwrap();
     } catch (cause) {
       setError(errorMessage(cause, "Unable to update department."));
+    }
+  }
+
+  async function handleDeleteDepartment() {
+    if (!deletingDepartment) return;
+    setError("");
+    setIsDeleting(true);
+    try {
+      await deleteDepartment(deletingDepartment.id).unwrap();
+      setDeletingDepartment(null);
+    } catch (cause) {
+      setError(errorMessage(cause, "Unable to delete department."));
+    } finally {
+      setIsDeleting(false);
     }
   }
 
@@ -114,6 +136,7 @@ export function OrganizationPage() {
             headcount={headcounts.get(department.id) ?? 0}
             canEdit={admin}
             onEdit={() => setEditingDepartment(department)}
+            onDelete={() => setDeletingDepartment(department)}
           />
         ))}
       </div>
@@ -123,6 +146,21 @@ export function OrganizationPage() {
         department={editingDepartment}
         onClose={() => setEditingDepartment(null)}
         onSave={handleUpdateDepartment}
+      />
+      <ConfirmDialog
+        open={Boolean(deletingDepartment)}
+        title="Delete department?"
+        description={
+          deletingDepartment
+            ? `Delete ${deletingDepartment.name}? Only empty departments can be removed.`
+            : ""
+        }
+        confirmLabel="Delete department"
+        busy={isDeleting}
+        onCancel={() => {
+          if (!isDeleting) setDeletingDepartment(null);
+        }}
+        onConfirm={() => void handleDeleteDepartment()}
       />
     </div>
   );

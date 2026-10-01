@@ -28,32 +28,34 @@ export function LoginForm({
       <div>
         <label
           htmlFor="identifier"
-          className="mb-1.5 block text-xs font-semibold text-slate-300"
+          className="mb-1.5 block text-xs font-semibold text-slate-700"
         >
           Email or username
         </label>
         <Input
           id="identifier"
+          placeholder="name@example.com or username"
           value={identifier}
           onChange={(e) => onIdentifierChange(e.target.value)}
           autoComplete="username"
           autoFocus
           required
-          className="w-full rounded-xl border-slate-700 bg-slate-800/80 text-white placeholder-slate-500 focus:border-rica-500 focus:ring-rica-500/20"
+          className="w-full rounded-xl border-slate-300 bg-white text-slate-900 placeholder-slate-400 focus:border-rica-500 focus:ring-rica-500/20"
         />
       </div>
 
       <div>
         <label
           htmlFor="password"
-          className="mb-1.5 block text-xs font-semibold text-slate-300"
+          className="mb-1.5 block text-xs font-semibold text-slate-700"
         >
           Password
         </label>
         <div className="relative">
           <Input
             id="password"
-            className="w-full rounded-xl border-slate-700 bg-slate-800/80 text-white placeholder-slate-500 pr-11 focus:border-rica-500 focus:ring-rica-500/20"
+            placeholder="Enter your password"
+            className="w-full rounded-xl border-slate-300 bg-white text-slate-900 placeholder-slate-400 pr-11 focus:border-rica-500 focus:ring-rica-500/20"
             type={showPassword ? "text" : "password"}
             value={password}
             onChange={(e) => onPasswordChange(e.target.value)}
@@ -63,7 +65,7 @@ export function LoginForm({
           <button
             type="button"
             onClick={() => setShowPassword((v) => !v)}
-            className="absolute right-2 top-1/2 -translate-y-1/2 rounded-lg p-1.5 text-slate-400 hover:bg-slate-700/60 hover:text-slate-200 transition-colors"
+            className="absolute right-2 top-1/2 -translate-y-1/2 rounded-lg p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-700 transition-colors"
             aria-label={showPassword ? "Hide password" : "Show password"}
           >
             {showPassword ? <EyeOff size={17} /> : <Eye size={17} />}

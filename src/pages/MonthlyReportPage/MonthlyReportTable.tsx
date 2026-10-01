@@ -1,5 +1,6 @@
 // src/pages/MonthlyReportPage/MonthlyReportTable.tsx
-import { Card } from "../../components/ui";
+import { useMemo, useState } from "react";
+import { Card, Pagination } from "../../components/ui";
 import { bandColor, formatMinutes } from "../../lib/utils";
 import type { PerformanceBand } from "../../types/types";
 
@@ -59,6 +60,14 @@ export function MonthlyReportTable({
   summary,
   isLoading,
 }: MonthlyReportTableProps) {
+  const [page, setPage] = useState(1);
+  const pageSize = 15;
+  const pageCount = Math.max(1, Math.ceil(summary.length / pageSize));
+  const visibleSummary = useMemo(
+    () => summary.slice((page - 1) * pageSize, page * pageSize),
+    [page, summary],
+  );
+
   return (
     <Card className="overflow-hidden">
       <div className="overflow-x-auto">
@@ -103,12 +112,12 @@ export function MonthlyReportTable({
                 </td>
               </tr>
             ) : (
-              summary.map((r, idx) => (
+              visibleSummary.map((r, idx) => (
                 <tr
                   key={r["Person ID"] || idx}
-                  className="transition-colors hover:bg-slate-50/80"
+                  className="border-b border-slate-100 transition-colors odd:bg-slate-50/50 hover:bg-rica-50/70 dark:border-slate-800 dark:odd:bg-slate-800/30 dark:hover:bg-slate-800"
                 >
-                  <td className="px-3 py-3 text-slate-500">{idx + 1}</td>
+                  <td className="px-3 py-3 text-slate-500">{(page - 1) * pageSize + idx + 1}</td>
 
                   <td className="px-3 py-3 font-medium text-slate-900">
                     {r.Name}
@@ -181,6 +190,13 @@ export function MonthlyReportTable({
           )}
         </table>
       </div>
+      <Pagination
+        page={Math.min(page, pageCount)}
+        pageCount={pageCount}
+        total={summary.length}
+        pageSize={pageSize}
+        onPageChange={setPage}
+      />
     </Card>
   );
 }
