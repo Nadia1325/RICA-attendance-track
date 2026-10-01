@@ -31,6 +31,8 @@ export function RecentBatchesCard({
   onCloseAnomalies,
   onDeleteBatch,
 }: RecentBatchesCardProps) {
+  const visibleBatches = batches.slice(0, 25);
+
   return (
     <Card className="min-w-0 p-4 sm:p-6">
       <div className="flex items-center gap-2">
@@ -39,8 +41,13 @@ export function RecentBatchesCard({
       </div>
       <p className="mt-1 text-xs text-slate-500">Attendance batches imported into the RICA system.</p>
 
-      <ul className="mt-4 space-y-3">
-        {batches.map((batch) => (
+      <p className="mt-3 text-[11px] font-medium uppercase tracking-wide text-slate-400">
+        Showing {visibleBatches.length} of {batches.length} batches
+      </p>
+
+      <div className="mt-3 max-h-[calc(100vh-20rem)] min-h-0 overflow-y-auto pr-1">
+      <ul className="space-y-3">
+        {visibleBatches.map((batch) => (
           <li key={batch.id} className="min-w-0 rounded-xl border border-slate-200 p-3 dark:border-slate-700">
             <div className="flex min-w-0 items-center justify-between gap-2">
               <p className="truncate text-sm font-semibold text-slate-800 dark:text-slate-100">{batch.fileName}</p>
@@ -75,6 +82,7 @@ export function RecentBatchesCard({
           </li>
         ))}
       </ul>
+      </div>
 
       {batches.length === 0 && <p className="mt-4 text-sm text-slate-500">No import batches yet.</p>}
 
