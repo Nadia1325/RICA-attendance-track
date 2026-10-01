@@ -61,7 +61,7 @@ const baseQueryWithReauth: BaseQueryFn<
     const refreshToken = (api.getState() as RootState).auth.refreshToken;
     if (refreshToken) {
       refreshing ??= (async () => {
-        const res = await fetch(`${API_URL}/api/auth/refresh`, {
+        const res = await fetch(`${API_URL}/auth/refresh`, {
           method: "POST",
           headers: { Authorization: `Bearer ${refreshToken}` },
         });

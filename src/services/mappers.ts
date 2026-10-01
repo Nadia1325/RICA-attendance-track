@@ -52,6 +52,7 @@ export function mapUser(row: ApiRow, fallbackName = "RICA user"): User | null {
     avatarInitials: initials(name),
     passwordHash: "",
     active: row.is_active !== false && row.active !== false,
+    lastLoginAt: row.last_login_at ? String(row.last_login_at) : undefined,
   };
 }
 
@@ -261,7 +262,8 @@ export const mapAudit = (l: ApiRow): AuditLog => ({
   id: String(l.id),
   timestamp: String(l.created_at ?? ""),
   userId: String(l.user_id ?? ""),
-  userName: String(l.user_name ?? l.user_id ?? "System"),
+  userName: String(l.user_name ?? l.user_username ?? l.user_id ?? "System"),
+  userEmail: l.user_email ? String(l.user_email) : undefined,
   action: String(l.action ?? ""),
   entity: String(l.entity_type ?? ""),
   details: String(l.entity_id ?? ""),

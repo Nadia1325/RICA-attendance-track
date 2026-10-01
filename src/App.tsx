@@ -19,6 +19,12 @@ import ShiftsPage from "./pages/ShiftsPage";
 import UploadPage from "./pages/UploadPage";
 import UsersPage from "./pages/UsersPage";
 import VerificationPage from "./pages/VerificationPage"
+import { useAppSelector } from "./app/hooks";
+
+function ProtectedRoute() {
+  const accessToken = useAppSelector((state) => state.auth.accessToken);
+  return accessToken ? <AppShell /> : <Navigate to="/login" replace />;
+}
 
 function App() {
   return (
@@ -27,7 +33,7 @@ function App() {
       <Route path="/login" element={<LoginPage />} />
 
       {/* Protected under AppShell */}
-      <Route element={<AppShell />}>
+      <Route element={<ProtectedRoute />}>
         <Route path="/" element={<DashboardPage />} />
         <Route path="/upload" element={<UploadPage />} />
         <Route path="/raw" element={<RawAttendancePage />} />

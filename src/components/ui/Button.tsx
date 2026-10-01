@@ -12,8 +12,8 @@ export const Button: React.FC<ButtonProps> = ({
 }) => {
   const styles = {
     primary: "bg-teal-700 text-white hover:bg-teal-800 shadow-sm",
-    secondary: "bg-white text-slate-800 ring-1 ring-slate-200 hover:bg-slate-50",
-    ghost: "text-slate-600 hover:bg-slate-100",
+    secondary: "bg-white text-slate-800 ring-1 ring-slate-200 hover:bg-slate-50 dark:bg-slate-800 dark:text-slate-100 dark:ring-slate-700 dark:hover:bg-slate-700",
+    ghost: "text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800",
     danger: "bg-rose-600 text-white hover:bg-rose-700",
     outline: "border border-teal-700 text-teal-800 hover:bg-teal-50",
   }[variant];

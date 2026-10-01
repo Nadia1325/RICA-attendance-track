@@ -8,6 +8,8 @@ interface NavItemsProps {
   currentUser: any;
   openFlags: number;
   mobile?: boolean;
+  collapsed?: boolean;
+  badgeCounts?: Record<string, number>;
   onItemClick?: () => void;
 }
 
@@ -16,6 +18,8 @@ export const NavItems: React.FC<NavItemsProps> = ({
   currentUser,
   openFlags,
   mobile = false,
+  collapsed = false,
+  badgeCounts = {},
   onItemClick,
 }) => {
   const location = useLocation();
@@ -38,6 +42,7 @@ export const NavItems: React.FC<NavItemsProps> = ({
           item.to === "/"
             ? location.pathname === "/"
             : location.pathname.startsWith(item.to);
+          const badgeCount = badgeCounts[item.to] ?? 0;
 
         return (
           <NavLink
@@ -45,11 +50,13 @@ export const NavItems: React.FC<NavItemsProps> = ({
             to={item.to}
             onClick={onItemClick}
             className={cn(
-              "sidebar-link flex min-w-0 items-center gap-3 rounded-xl px-3 py-2.5 text-xs font-semibold transition-all duration-200",
+              "group sidebar-link relative flex min-w-0 items-center rounded-xl py-2.5 text-xs font-semibold transition-all duration-200",
+              collapsed && !mobile ? "justify-center px-2" : "gap-3 px-3",
               active
                 ? "bg-rica-500 text-white shadow-md shadow-rica-500/20"
-                : "text-slate-400 hover:bg-slate-800/60 hover:text-slate-200",
+                : "text-slate-500 hover:bg-slate-200 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-800/60 dark:hover:text-slate-200",
             )}
+            title={collapsed && !mobile ? item.label : undefined}
           >
             <Icon
               size={16}
@@ -57,20 +64,23 @@ export const NavItems: React.FC<NavItemsProps> = ({
                 "shrink-0 transition-colors",
                 active
                   ? "text-white"
-                  : "text-slate-400 group-hover:text-slate-200",
+                  : "text-slate-500 group-hover:text-slate-900 dark:text-slate-400 dark:group-hover:text-slate-200",
               )}
             />
-            <span className="min-w-0 flex-1 truncate">{item.label}</span>
-            {item.to === "/verification" && openFlags > 0 && (
+            {(!collapsed || mobile) && (
+              <span className="min-w-0 flex-1 truncate">{item.label}</span>
+            )}
+            {badgeCount > 0 && (
               <span
                 className={cn(
+                  collapsed && !mobile ? "absolute -right-1 -top-1 px-1" : "",
                   "rounded-full px-2 py-0.5 text-[10px] font-bold transition-colors",
                   active
                     ? "bg-slate-950/40 text-white"
                     : "bg-amber-500/20 text-amber-300 border border-amber-500/30",
                 )}
               >
-                {openFlags}
+                {badgeCount}
               </span>
             )}
           </NavLink>

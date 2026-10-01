@@ -17,10 +17,13 @@ import type { Role, User } from "../../types/types";
 import { PermissionsMatrix } from "./PermissionsMatrix";
 import { UserFormCard } from "./UserFormCard";
 import { UsersTable } from "./UsersTable";
+import { EditUserModal } from "./EditUserModal";
 
 export function UsersPage() {
   const { currentUser, departments } = useApp();
-  const allowed = Boolean(currentUser && can(currentUser.role, "manageUsers"));
+  const allowed = Boolean(
+    currentUser?.role && can(currentUser.role as Role, "manageUsers"),
+  );
 
   const { data: rawUsers = [] } = useGetUsersQuery(undefined, {
     skip: !allowed,
@@ -37,6 +40,11 @@ export function UsersPage() {
 
   const [open, setOpen] = useState(false);
   const [resetFor, setResetFor] = useState<string | null>(null);
+  const [editingUser, setEditingUser] = useState<{
+    id: string;
+    name: string;
+    email: string;
+  } | null>(null);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
 
@@ -64,6 +72,7 @@ export function UsersPage() {
     try {
       await createUser({
         name: String(fd.get("name")),
+        username: String(fd.get("username")),
         email: String(fd.get("email")),
         password,
         role,
@@ -131,23 +140,18 @@ export function UsersPage() {
       return;
     }
 
-    const nextName = window.prompt("Full name", currentName);
-    if (nextName === null) return;
+    setEditingUser({ id, name: currentName, email: currentEmail });
+  }
 
-    const nextEmail = window.prompt("Email address", currentEmail);
-    if (nextEmail === null) return;
-
+  async function handleSaveUser(id: string, name: string, email: string) {
     setError("");
     setMessage("");
     try {
-      await updateUser({
-        id,
-        name: nextName.trim(),
-        email: nextEmail.trim(),
-      }).unwrap();
+      await updateUser({ id, name, email }).unwrap();
       setMessage("User details updated.");
     } catch (err) {
       setError(errorMessage(err, "Unable to update user details."));
+      throw err;
     }
   }
 
@@ -203,6 +207,12 @@ export function UsersPage() {
       />
 
       <PermissionsMatrix />
+      <EditUserModal
+        key={editingUser?.id ?? "closed"}
+        user={editingUser}
+        onClose={() => setEditingUser(null)}
+        onSave={handleSaveUser}
+      />
     </div>
   );
 }

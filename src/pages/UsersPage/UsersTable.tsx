@@ -1,6 +1,6 @@
 // src/pages/UsersPage/UsersTable.tsx
-import { type FormEvent } from "react";
-import { Card } from "../../components/ui";
+import { type FormEvent, useMemo, useState } from "react";
+import { Card, Pagination } from "../../components/ui";
 import type { Department, User } from "../../types/types";
 import { UserRow } from "./UserRow";
 
@@ -25,11 +25,19 @@ export function UsersTable({
   onEditUser,
   onDeactivateUser,
 }: UsersTableProps) {
+  const [page, setPage] = useState(1);
+  const pageSize = 10;
+  const pageCount = Math.max(1, Math.ceil(users.length / pageSize));
+  const visibleUsers = useMemo(
+    () => users.slice((page - 1) * pageSize, page * pageSize),
+    [page, users],
+  );
   const headings = [
     "User",
     "Email",
     "Role",
     "Scope",
+    "Last sign-in",
     "Status",
     "Account actions",
   ];
@@ -48,7 +56,7 @@ export function UsersTable({
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100">
-            {users.map((u) => (
+            {visibleUsers.map((u) => (
               <UserRow
                 key={u.id}
                 user={u}
@@ -65,6 +73,13 @@ export function UsersTable({
           </tbody>
         </table>
       </div>
+      <Pagination
+        page={Math.min(page, pageCount)}
+        pageCount={pageCount}
+        total={users.length}
+        pageSize={pageSize}
+        onPageChange={setPage}
+      />
     </Card>
   );
 }

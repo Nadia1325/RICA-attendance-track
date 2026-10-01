@@ -1,5 +1,6 @@
 // src/pages/EmployeesPage/EmployeeTable.tsx
-import { Badge, Card } from "../../components/ui";
+import { useMemo, useState } from "react";
+import { Badge, Card, Pagination } from "../../components/ui";
 import type { Department, Employee, Shift } from "../../types";
 
 interface EmployeeTableProps {
@@ -21,6 +22,13 @@ export function EmployeeTable({
   errorMessage,
   onRetry,
 }: EmployeeTableProps) {
+  const [page, setPage] = useState(1);
+  const pageSize = 15;
+  const pageCount = Math.max(1, Math.ceil(employees.length / pageSize));
+  const visibleEmployees = useMemo(
+    () => employees.slice((page - 1) * pageSize, page * pageSize),
+    [employees, page],
+  );
   if (isLoading) {
     return (
       <Card className="p-8 text-center text-sm text-slate-500">
@@ -64,7 +72,7 @@ export function EmployeeTable({
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100">
-            {employees.map((e) => {
+            {visibleEmployees.map((e) => {
               const deptName =
                 departments.find((d) => d.id === e.departmentId)?.name ?? "—";
               const shiftName =
@@ -106,6 +114,13 @@ export function EmployeeTable({
           </tbody>
         </table>
       </div>
+      <Pagination
+        page={Math.min(page, pageCount)}
+        pageCount={pageCount}
+        total={employees.length}
+        pageSize={pageSize}
+        onPageChange={setPage}
+      />
     </Card>
   );
 }

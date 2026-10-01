@@ -150,6 +150,13 @@ export const attendanceApi = baseApi.injectEndpoints({
       transformResponse: asArray,
       providesTags: (_r, _e, id) => [{ type: "Anomaly", id }],
     }),
+    deleteBatch: build.mutation<unknown, string>({
+      query: (id) => ({
+        url: `/attendance/batches/${encodeURIComponent(id)}`,
+        method: "DELETE",
+      }),
+      invalidatesTags: ["Batch", "Raw", "Final", "Anomaly", "Report"],
+    }),
 
     uploadAttendance: build.mutation<ApiRow, File>({
       query: (file) => {
@@ -177,6 +184,7 @@ export const {
   useResolveAnomalyMutation,
   useGetBatchAnomaliesQuery,
   useGetBatchesQuery,
+  useDeleteBatchMutation,
   useLazyGetBatchAnomaliesQuery,
   useUploadAttendanceMutation,
 } = attendanceApi;

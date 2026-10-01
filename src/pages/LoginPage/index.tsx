@@ -147,10 +147,10 @@ export function LoginPage() {
           <div className="lg:col-span-5">
             <Card className="rounded-2xl border border-slate-800/80 bg-slate-900/90 p-6 shadow-2xl backdrop-blur-xl sm:p-8">
               <RicaLogo className="mx-auto mb-6 h-auto w-full max-w-[280px]" />
-              <h2 className="text-2xl font-bold tracking-tight text-white">
+              <h2 className="text-2xl font-bold tracking-tight text-slate-900">
                 Sign in
               </h2>
-              <p className="mt-1.5 text-sm text-slate-400 leading-relaxed">
+              <p className="mt-1.5 text-sm leading-relaxed text-slate-600">
                 Use the email or username assigned by your Admin, plus your
                 password.
               </p>
@@ -169,7 +169,7 @@ export function LoginPage() {
                 <button
                   type="button"
                   onClick={() => setShowForgot((v) => !v)}
-                  className="text-xs font-medium text-rica-400 hover:text-rica-300 transition-colors focus:outline-none focus:underline"
+                    className="text-xs font-medium text-rica-700 hover:text-rica-800 transition-colors focus:outline-none focus:underline"
                 >
                   Forgot your password?
                 </button>
@@ -178,7 +178,7 @@ export function LoginPage() {
               {recoveryMessage && (
                 <p
                   role="status"
-                  className="mt-3 rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-4 py-3 text-xs leading-5 text-emerald-300 animate-in fade-in"
+                    className="mt-3 rounded-xl border border-emerald-500/30 bg-emerald-50 px-4 py-3 text-xs leading-5 text-emerald-800 animate-in fade-in"
                 >
                   {recoveryMessage}
                 </p>
@@ -201,7 +201,7 @@ export function LoginPage() {
                 />
               )}
 
-              <p className="mt-6 flex items-center gap-2 border-t border-slate-800/60 pt-4 text-[11px] text-slate-400">
+              <p className="mt-6 flex items-center gap-2 border-t border-slate-200 pt-4 text-[11px] text-slate-600">
                 <ShieldCheck size={14} className="shrink-0 text-rica-400" />
                 <span>
                   Authorized RICA staff only. Activity is recorded in the audit

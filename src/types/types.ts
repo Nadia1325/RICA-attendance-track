@@ -31,6 +31,7 @@ export interface User {
   avatarInitials: string;
   passwordHash: string;
   active: boolean;
+  lastLoginAt?: string;
 }
 
 export interface Department {
@@ -170,6 +171,7 @@ export interface AuditLog {
   timestamp: string;
   userId: string;
   userName: string;
+  userEmail?: string;
   action: string;
   entity: string;
   details: string;
