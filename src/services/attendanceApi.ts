@@ -16,6 +16,9 @@ export interface RawAttendanceParams {
   month?: string;
   year?: string;
   mode?: string;
+  batch_id?: string;
+  unverified?: boolean;
+  all?: boolean;
   take?: number;
   skip?: number;
 }
@@ -77,6 +80,10 @@ export const attendanceApi = baseApi.injectEndpoints({
         if (params?.month) qs.set("month", params.month);
         if (params?.year) qs.set("year", params.year);
         if (params?.mode) qs.set("mode", params.mode);
+        if (params?.batch_id) qs.set("batch_id", params.batch_id);
+        if (params?.unverified !== undefined)
+          qs.set("unverified", String(params.unverified));
+        if (params?.all !== undefined) qs.set("all", String(params.all));
         if (params?.take) qs.set("take", String(params.take));
         if (params?.skip) qs.set("skip", String(params.skip));
 
@@ -84,9 +91,12 @@ export const attendanceApi = baseApi.injectEndpoints({
         return `/attendance/daily${queryString ? `?${queryString}` : ""}`;
       },
 
-      transformResponse: (res: any) => {
+      transformResponse: (res: unknown) => {
         if (Array.isArray(res)) return res;
-        return res.data || res.records || res.items || [];
+        if (!res || typeof res !== "object") return [];
+        const body = res as Record<string, unknown>;
+        const rows = body.rows ?? body.data ?? body.records ?? body.items;
+        return Array.isArray(rows) ? (rows as RawAttendanceItem[]) : [];
       },
 
       providesTags: ["Raw"],

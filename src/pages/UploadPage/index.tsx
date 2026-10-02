@@ -1,5 +1,6 @@
 // src/pages/UploadPage/index.tsx
 import { useMemo, useState } from "react";
+import { AlertTriangle, CheckCircle2 } from "lucide-react";
 import { downloadImportTemplate, parseRawWorkbook } from "../../lib/excel";
 import { RAW_HEADERS } from "../../lib/utils";
 import { useApp } from "../../data/store";
@@ -13,7 +14,7 @@ import {
 } from "../../services/api";
 // add to your existing react import
 
-import { Card, ConfirmDialog, PageHeader } from "../../components/ui";
+import { Button, Card, ConfirmDialog, PageHeader } from "../../components/ui";
 import { can } from "../../lib/permissions";
 import type { AttendanceRaw } from "../../types/types";
 
@@ -25,6 +26,14 @@ import {
   RecentBatchesCard,
 } from "./RecentBatchesCard";
 import { UrlImportForm } from "./UrlImportForm";
+
+interface ImportSummary {
+  fileName: string;
+  insertedCount: number;
+  rowCount: number;
+  duplicateCount: number;
+  anomalyCount: number;
+}
 
 export function UploadPage() {
   const { currentUser } = useApp();
@@ -39,6 +48,9 @@ export function UploadPage() {
   const [deleteBatch] = useDeleteBatchMutation();
 
   const [status, setStatus] = useState("");
+  const [importSummary, setImportSummary] = useState<ImportSummary | null>(
+    null,
+  );
   const [error, setError] = useState("");
   const [reading, setReading] = useState(false);
   const busy = reading || uploading;
@@ -71,6 +83,7 @@ export function UploadPage() {
     try {
       await deleteBatch(batch.id).unwrap();
       if (batchAnomalies?.batchId === batch.id) setBatchAnomalies(null);
+      setImportSummary(null);
       setStatus(`${batch.fileName} was deleted.`);
       setDeleteTarget(null);
     } catch (cause) {
@@ -83,11 +96,18 @@ export function UploadPage() {
   async function handlePrepareFile(file: File) {
     setError("");
     setStatus("");
+    setImportSummary(null);
     setReading(true);
     try {
       const rows = parseRawWorkbook(await file.arrayBuffer(), "preview");
       if (!rows.length) {
-        throw new Error("No attendance rows were found in this file.");
+        setPreview([]);
+        setSourceFile(file);
+        setFileName(file.name);
+        setStatus(
+          "Preview is unavailable for this workbook. The server will validate it during upload.",
+        );
+        return;
       }
       setPreview(rows);
       setSourceFile(file);
@@ -108,6 +128,7 @@ export function UploadPage() {
   async function handleLoadUrl() {
     setError("");
     setStatus("");
+    setImportSummary(null);
     setReading(true);
     try {
       const source = new URL(url.trim());
@@ -128,7 +149,13 @@ export function UploadPage() {
       });
       const rows = parseRawWorkbook(buffer, "preview");
       if (!rows.length) {
-        throw new Error("No attendance rows were found at this URL.");
+        setPreview([]);
+        setSourceFile(file);
+        setFileName(name);
+        setStatus(
+          "Preview is unavailable for this workbook. The server will validate it during upload.",
+        );
+        return;
       }
       setPreview(rows);
       setSourceFile(file);
@@ -147,9 +174,10 @@ export function UploadPage() {
   }
 
   async function handleCommit() {
-    if (!preview.length || !sourceFile) return;
+    if (!sourceFile) return;
     setError("");
     setStatus("");
+    setImportSummary(null);
     try {
       const response = await uploadAttendance(sourceFile).unwrap();
       const batch = (response.batch ?? response.data ?? response) as Record<
@@ -157,15 +185,13 @@ export function UploadPage() {
         unknown
       >;
       const count = Number(batch.rowCount ?? preview.length);
-      setStatus(
-        `Import completed: ${Number(
-          batch.insertedCount ?? count,
-        )} new of ${count} rows from ${fileName}; ${Number(
-          batch.duplicateCount ?? 0,
-        )} duplicates and ${Number(
-          batch.anomalyCount ?? 0,
-        )} anomalies. Batch ${String(batch.batchId ?? "accepted")}.`,
-      );
+      setImportSummary({
+        fileName,
+        insertedCount: Number(batch.insertedCount ?? count),
+        rowCount: count,
+        duplicateCount: Number(batch.duplicateCount ?? 0),
+        anomalyCount: Number(batch.anomalyCount ?? 0),
+      });
       setPreview([]);
       setSourceFile(null);
       setFileName("");
@@ -207,7 +233,47 @@ export function UploadPage() {
             onLoadUrl={() => void handleLoadUrl()}
           />
 
-          {status && (
+          {importSummary && (
+            <div
+              role="status"
+              className="mt-4 rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-emerald-950"
+            >
+              <div className="flex items-start gap-3">
+                <CheckCircle2 className="mt-0.5 shrink-0 text-emerald-600" size={20} />
+                <div className="min-w-0">
+                  <p className="font-semibold">Import completed</p>
+                  <p className="mt-1 truncate text-sm text-emerald-800">
+                    {importSummary.fileName}
+                  </p>
+                </div>
+              </div>
+              <div className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-3">
+                <div className="rounded-lg bg-white/70 px-3 py-2">
+                  <p className="text-xs text-emerald-700">Imported</p>
+                  <p className="mt-1 text-lg font-semibold">{importSummary.insertedCount}</p>
+                </div>
+                <div className="rounded-lg bg-white/70 px-3 py-2">
+                  <p className="text-xs text-emerald-700">Rows processed</p>
+                  <p className="mt-1 text-lg font-semibold">{importSummary.rowCount}</p>
+                </div>
+                <div className="rounded-lg bg-white/70 px-3 py-2">
+                  <p className="text-xs text-emerald-700">Duplicates</p>
+                  <p className="mt-1 text-lg font-semibold">{importSummary.duplicateCount}</p>
+                </div>
+              </div>
+              {importSummary.anomalyCount > 0 && (
+                <div className="mt-3 flex items-center gap-2 rounded-lg bg-amber-50 px-3 py-2 text-sm text-amber-900">
+                  <AlertTriangle className="shrink-0 text-amber-600" size={16} />
+                  <span>
+                    {importSummary.anomalyCount} anomal
+                    {importSummary.anomalyCount === 1 ? "y" : "ies"} need review.
+                  </span>
+                </div>
+              )}
+            </div>
+          )}
+
+          {status && !importSummary && (
             <p
               role="status"
               className="mt-4 rounded-xl bg-emerald-50 px-4 py-3 text-sm text-emerald-800"
@@ -231,6 +297,14 @@ export function UploadPage() {
             busy={busy}
             onConfirm={() => void handleCommit()}
           />
+
+          {sourceFile && preview.length === 0 && (
+            <div className="mt-6 border-t border-slate-100 pt-4">
+              <Button disabled={busy} onClick={() => void handleCommit()}>
+                {busy ? "Uploading…" : "Upload for server validation"}
+              </Button>
+            </div>
+          )}
 
           <div className="mt-6 border-t border-slate-100 pt-4">
             <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">

@@ -22,16 +22,30 @@ export function parseRawWorkbook(buffer: ArrayBuffer, batchId: string): Attendan
   const wb = XLSX.read(buffer, { type: "array", cellDates: true });
   if (!wb.SheetNames.length) throw new Error("The workbook contains no sheets.");
 
-  const sheet = wb.Sheets[wb.SheetNames[0]];
-  const rows = XLSX.utils.sheet_to_json<(string | number | Date)[]>(sheet, {
-    header: 1,
-    defval: "",
-    raw: false,
-  });
+  let rows: (string | number | Date)[][] = [];
+  let header: string[] = [];
+  let headerRowIndex = -1;
 
-  if (!rows.length) throw new Error("The workbook is empty.");
+  for (const sheetName of wb.SheetNames) {
+    const sheetRows = XLSX.utils.sheet_to_json<(string | number | Date)[]>(
+      wb.Sheets[sheetName],
+      { header: 1, defval: "", raw: false },
+    );
+    const candidateIndex = sheetRows.findIndex((row) =>
+      row.some((value) => String(value).trim() === "Person ID"),
+    );
+    if (candidateIndex >= 0) {
+      rows = sheetRows;
+      headerRowIndex = candidateIndex;
+      header = rows[headerRowIndex].map((h) => String(h).trim());
+      break;
+    }
+  }
 
-  const header = rows[0].map((h) => String(h).trim());
+  if (headerRowIndex < 0) {
+    throw new Error("Could not locate the attendance header row.");
+  }
+
   const missing = RAW_HEADERS.filter((h) => !header.includes(h));
   if (missing.length) {
     throw new Error(`Missing columns: ${missing.join(", ")}`);
@@ -40,7 +54,7 @@ export function parseRawWorkbook(buffer: ArrayBuffer, batchId: string): Attendan
   const idx = Object.fromEntries(header.map((h, i) => [h, i]));
   const records: AttendanceRaw[] = [];
 
-  rows.slice(1).forEach((row, i) => {
+  rows.slice(headerRowIndex + 1).forEach((row, i) => {
     const personId = cell(row[idx["Person ID"]]);
     const name = cell(row[idx["Name"]]);
     if (!personId && !name) return;
