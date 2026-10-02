@@ -32,12 +32,19 @@ type ApiRawRecord = {
   check_out?: string;
   checkOut?: string;
   work?: string | number;
+  work_min?: string | number;
   ot?: string | number;
+  ot_min?: string | number;
   attended?: string | number;
+  attended_min?: string | number;
   late?: string | number;
+  late_min?: string | number;
   early?: string | number;
+  early_min?: string | number;
   absent?: string | number;
+  absent_min?: string | number;
   leave?: string | number;
+  leave_min?: string | number;
   status?: string;
   records?: string | number;
   batch_id?: string;
@@ -45,7 +52,7 @@ type ApiRawRecord = {
 };
 
 export function RawAttendancePage() {
-  const { currentUser, departments } = useApp();
+  const { departments } = useApp();
 
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedDept, setSelectedDept] = useState("all");
@@ -62,7 +69,10 @@ export function RawAttendancePage() {
     { refetchOnMountOrArgChange: true },
   );
 
-  const rawApiData = (rawQ.data as ApiRawRecord[] | undefined) ?? [];
+  const rawApiData = useMemo(
+    () => (rawQ.data as ApiRawRecord[] | undefined) ?? [],
+    [rawQ.data],
+  );
   const isLoading = rawQ.isLoading || rawQ.isFetching;
   const errorMsg = rawQ.isError
     ? errorMessage(rawQ.error, "Failed to load raw attendance records.")
@@ -101,13 +111,13 @@ export function RawAttendancePage() {
         timetable: row.timetable ?? "",
         checkIn: row.check_in ?? row.checkIn ?? "",
         checkOut: row.check_out ?? row.checkOut ?? "",
-        work: row.work ?? 0,
-        ot: row.ot ?? 0,
-        attended: row.attended ?? 0,
-        late: row.late ?? 0,
-        early: row.early ?? 0,
-        absent: row.absent ?? 0,
-        leave: row.leave ?? 0,
+        work: row.work ?? row.work_min ?? 0,
+        ot: row.ot ?? row.ot_min ?? 0,
+        attended: row.attended ?? row.attended_min ?? 0,
+        late: row.late ?? row.late_min ?? 0,
+        early: row.early ?? row.early_min ?? 0,
+        absent: row.absent ?? row.absent_min ?? 0,
+        leave: row.leave ?? row.leave_min ?? 0,
         status: row.status ?? "Present",
         records: row.records ?? 0,
         batchId: row.batch_id ?? row.batchId ?? "",
